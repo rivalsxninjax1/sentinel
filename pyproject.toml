@@ -1,0 +1,35 @@
+[project]
+name = "sentinel"
+version = "0.0.1"
+description = "AI-assisted context-aware web application security testing and vulnerability verification platform (authorized use only)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "See LICENSE" }
+authors = [{ name = "Project owner" }]
+
+# Dependencies are intentionally NOT pinned yet — finalized in Phase 1 when the
+# core foundation (config, CLI, HTTP client, DB) is actually implemented.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "mypy",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = false

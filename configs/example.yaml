@@ -1,0 +1,23 @@
+# Example SENTINEL scan configuration (Phase 0 placeholder shape — finalized in Phase 1)
+
+target:
+  name: "example-authorized-target"
+  scope:
+    allow:
+      - "https://app.example-authorized-target.test"
+    deny: []
+
+scan:
+  mode: passive   # passive | safe | active
+
+limits:
+  requests_per_second: 5
+  concurrency: 3
+  max_requests: 10000
+  max_crawl_depth: 5
+
+llm:
+  provider: ollama
+  model: "CHANGE_ME"
+  base_url: "http://localhost:11434"
+  temperature: 0
