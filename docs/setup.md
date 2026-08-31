@@ -30,3 +30,18 @@ Phase 5. Each adapter's `is_available()` will explicitly detect architecture and
 silently run an incompatible (e.g., x86_64-only via Rosetta without the user's knowledge)
 binary. Where a tool lacks a native ARM64 build, the adapter will report it as unavailable
 and `docs/tools.md` will document the Docker-based fallback.
+
+## Optional: browser-based discovery (Phase 3)
+
+`sentinel scan discover-js` can run Playwright-based dynamic discovery, but it's fully
+optional — the command works and does everything else (script fetch, JS route
+extraction) without it. To enable browser discovery:
+
+```bash
+pip install -e ".[browser]"
+playwright install chromium
+```
+
+If Playwright isn't installed, or `playwright install chromium` hasn't been run,
+`discover-js` detects this automatically and skips the browser step, reporting
+"Browser discovery: skipped (Playwright unavailable)" rather than failing.

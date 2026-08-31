@@ -9,12 +9,12 @@ and tested before the next one starts. No phase jumps ahead into later functiona
 
 | Phase | Name | Status |
 |---|---|---|
-| 0 | Architecture | ✅ this document set |
-| 1 | Core Foundation | ⏳ next |
-| 2 | Recon | not started |
-| 3 | JavaScript Intelligence | not started |
-| 4 | Ollama Intelligence | not started |
-| 5 | Tool Orchestration | not started |
+| 0 | Architecture | ✅ |
+| 1 | Core Foundation | ✅ |
+| 2 | Recon | ✅ |
+| 3 | JavaScript Intelligence | ✅ |
+| 4 | Ollama Intelligence | ✅ |
+| 5 | Tool Orchestration | ⏳ next |
 | 6 | Detection (XSS, SQLi, path traversal, open redirect, headers, info exposure) | not started |
 | 7 | Advanced Detection (SSRF, SSTI, XXE, upload, CSRF, CORS, IDOR/BOLA, JWT) | not started |
 | 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | not started |

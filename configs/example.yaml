@@ -6,6 +6,8 @@ target:
     allow:
       - "https://app.example-authorized-target.test"
     deny: []
+  seed_urls:
+    - "https://app.example-authorized-target.test/"
 
 scan:
   mode: passive   # passive | safe | active
