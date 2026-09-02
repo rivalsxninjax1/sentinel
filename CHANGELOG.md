@@ -3,6 +3,55 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.5.0] - Phase 5 - Tool Orchestration
+### Added
+- `app/tools/base.py` — `SecurityToolAdapter` ABC: `run()` provides shared,
+  non-overridable lifecycle plumbing (scope enforcement -> availability check ->
+  config validation -> command build -> timeout-bound subprocess execution -> parse
+  -> normalize). No adapter can skip the scope check — it happens once, centrally.
+- `app/tools/process.py` — injectable `ProcessRunner` + `default_process_runner`
+  (real `asyncio.create_subprocess_exec`, timeout-bound, raises `ToolTimeoutError`).
+- `app/tools/models.py` — `NormalizedFinding`, the one shape every adapter's output
+  collapses to.
+- `app/tools/registry.py` — `ToolRegistry` + `build_default_registry()`
+  (availability/version report, no execution).
+- Six adapters, each `SecurityToolAdapter` subclass:
+  - `httpx.py` — ProjectDiscovery httpx (JSON-lines probing). **Discovered and
+    documented a real naming collision**: the Python `httpx` package installs its own
+    CLI script also named `httpx`, which can shadow the Go binary on PATH. Fails
+    safely (zero findings, not garbage), and `sentinel tools list` now actively warns
+    about it — see docs/tools.md.
+  - `nuclei.py` — template-based scanning, severity-restricted to info/low in SAFE
+    mode, requires SAFE or ACTIVE (never PASSIVE).
+  - `ffuf.py` — content discovery/fuzzing, requires an explicit wordlist path (never
+    auto-selected) and SAFE/ACTIVE mode.
+  - `katana.py` — supplementary crawler, JSON-lines parsing.
+  - `xsstrike.py` — XSS testing; no stable JSON output mode exists, so parsing is an
+    explicitly-documented line-heuristic, requires ACTIVE mode, findings marked
+    `confidence: low` in metadata pending Phase 9 verification.
+  - `sqlmap.py` — SQL injection detection; same line-heuristic caveat as XSStrike,
+    requires ACTIVE mode, and `build_command()` is hard-documented to never include
+    `--dump`/`--os-shell`/`--os-pwn`/`--sql-shell` (enforced by a dedicated test that
+    asserts these flags are absent from every built command).
+- CLI: `sentinel tools list` — availability + version report for all six adapters,
+  runs nothing.
+- Tests: `test_tools_process.py` (real subprocess execution, no mocking — timeout
+  path included), `test_tools_base.py` (full lifecycle incl. scope/availability/
+  config-error/timeout paths via a test-only fake adapter), `test_tools_registry.py`,
+  and one test file per adapter (build_command flag correctness, parse/normalize
+  against realistic sample output, and a full `run()` happy path via injected runner
+  + monkeypatched `shutil.which`) — 44 new tests (126 total, all passing).
+
+### Notes
+- **Real bug caught during this phase, not simulated:** running `sentinel tools list`
+  in the dev environment surfaced the httpx naming collision described above — kept
+  as a permanent documented gotcha in docs/tools.md rather than a one-off fix, since
+  anyone with the Python httpx package installed (which SENTINEL itself depends on)
+  can hit this.
+- Adapters are NOT wired into scan execution yet — nothing currently decides *when*
+  to run one based on a scan's Phase 4 classifications. That orchestration/decision
+  logic is Phase 6+, deliberately deferred (see docs/tools.md's closing note).
+
 ## [0.4.0] - Phase 4 - Ollama Intelligence
 ### Added
 - `app/llm/provider.py` — `LLMProvider` ABC: `complete_structured(prompt, schema) ->

@@ -14,8 +14,8 @@ and tested before the next one starts. No phase jumps ahead into later functiona
 | 2 | Recon | ✅ |
 | 3 | JavaScript Intelligence | ✅ |
 | 4 | Ollama Intelligence | ✅ |
-| 5 | Tool Orchestration | ⏳ next |
-| 6 | Detection (XSS, SQLi, path traversal, open redirect, headers, info exposure) | not started |
+| 5 | Tool Orchestration | ✅ |
+| 6 | Detection (XSS, SQLi, path traversal, open redirect, headers, info exposure) | ⏳ next |
 | 7 | Advanced Detection (SSRF, SSTI, XXE, upload, CSRF, CORS, IDOR/BOLA, JWT) | not started |
 | 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | not started |
 | 9 | Verification & Correlation | not started |
