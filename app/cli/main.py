@@ -7,6 +7,7 @@ Commands implemented so far:
   sentinel scan discover-js <scan_id> --config configs/example.yaml
   sentinel scan classify <scan_id> --config configs/example.yaml
   sentinel scan status <scan_id> --config configs/example.yaml
+  sentinel tools list
 
 Later phases attach real testing/verification behavior to the lifecycle stages this
 scaffolds.
@@ -38,10 +39,13 @@ from app.storage.repository import (
     ScanRepository,
     TargetRepository,
 )
+from app.tools.registry import build_default_registry
 
 app = typer.Typer(help="SENTINEL — authorized web application security testing platform.")
 scan_app = typer.Typer(help="Scan lifecycle commands.")
+tools_app = typer.Typer(help="Tool adapter commands.")
 app.add_typer(scan_app, name="scan")
+app.add_typer(tools_app, name="tools")
 
 logger = get_logger(__name__)
 
@@ -554,6 +558,31 @@ def scan_status(
                 f"status={scan_record.status} stopped_reason={scan_record.stopped_reason}"
             )
         await engine.dispose()
+
+    asyncio.run(_run())
+
+
+@tools_app.command("list")
+def tools_list() -> None:
+    """Phase 5 — Tool Orchestration: show every registered external tool adapter,
+    whether its binary is currently available on PATH, and its detected version.
+    Does not run any tool — purely an availability/version report (see
+    docs/architecture.md §48, tool version tracking)."""
+
+    async def _run() -> None:
+        registry = build_default_registry()
+        report = await registry.availability_report()
+        for tool_name, info in report.items():
+            status = "available" if info["available"] else "NOT FOUND on PATH"
+            version = info["version"] or "-"
+            line = f"{tool_name:12s} {status:20s} version={version}"
+            if tool_name == "httpx" and info["available"] and info["version"] is None:
+                line += (
+                    "  [!] found an 'httpx' binary but couldn't read its version — "
+                    "this is often the Python httpx package's own CLI shadowing "
+                    "ProjectDiscovery's httpx on PATH. See docs/tools.md."
+                )
+            typer.echo(line)
 
     asyncio.run(_run())
 
