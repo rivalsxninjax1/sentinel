@@ -3,10 +3,12 @@ import pytest
 from app.storage.db import get_engine, init_db, make_session_factory, session_scope
 from app.storage.repository import (
     AttackSurfaceRepository,
+    FindingsRepository,
     IntelligenceRepository,
     ScanRepository,
     TargetRepository,
 )
+from app.tools.models import NormalizedFinding
 
 
 @pytest.mark.asyncio
@@ -72,5 +74,35 @@ async def test_attack_surface_persistence_roundtrip(tmp_path):
         assert len(classifications) == 1
         assert classifications[0].risk_score == 8
         assert classifications[0].source == "ai"
+
+        findings_repo = FindingsRepository(session)
+        test_record = await findings_repo.create_test(
+            scan_id=scan.id,
+            endpoint_id=endpoint.id,
+            vulnerability_class="xss",
+            scanner_name="reflected_xss",
+            parameter_id=None,
+        )
+        normalized = NormalizedFinding(
+            tool_name="reflected_xss",
+            tool_version=None,
+            title="Unescaped reflection via parameter 'q'",
+            severity="medium",
+            matched_endpoint="https://app.example.com/search?q=x",
+            raw_output="marker reflected unescaped",
+            metadata={"vulnerability_class": "xss", "confidence": "low"},
+        )
+        finding_record = await findings_repo.create_finding_from_normalized(
+            scan.id, test_record.id, normalized
+        )
+        assert finding_record.confidence == "low"
+        assert finding_record.severity == "medium"
+
+        findings = await findings_repo.list_findings_for_scan(scan.id)
+        assert len(findings) == 1
+
+        evidence = await findings_repo.list_evidence_for_finding(finding_record.id)
+        assert len(evidence) == 1
+        assert evidence[0].kind == "raw_output"
 
     await engine.dispose()

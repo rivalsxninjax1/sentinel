@@ -7,7 +7,6 @@ Commands implemented so far:
   sentinel scan discover-js <scan_id> --config configs/example.yaml
   sentinel scan classify <scan_id> --config configs/example.yaml
   sentinel scan status <scan_id> --config configs/example.yaml
-  sentinel tools list
 
 Later phases attach real testing/verification behavior to the lifecycle stages this
 scaffolds.
@@ -26,15 +25,18 @@ from app.core.http_client import SentinelHTTPClient
 from app.core.lifecycle import InvalidTransition, ScanLifecycle, ScanState
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limiter import RateLimiter
+from app.core.test_orchestrator import TestOrchestrator
 from app.crawler.browser import BrowserDiscovery, BrowserEngine, BrowserUnavailable
 from app.crawler.crawler import Crawler
 from app.intelligence.javascript import JSExtractionResult, extract_from_js
 from app.intelligence.reasoning import SecurityReasoningEngine
 from app.llm.ollama_provider import OllamaProvider
+from app.scanners.registry import build_default_scanners
 from app.scope.engine import ScopeEngine, ScopeViolation
 from app.storage.db import get_engine, init_db, make_session_factory, session_scope
 from app.storage.repository import (
     AttackSurfaceRepository,
+    FindingsRepository,
     IntelligenceRepository,
     ScanRepository,
     TargetRepository,
@@ -531,6 +533,148 @@ def scan_classify(
             f"({ai_count} via AI, {fallback_count} fallback"
             f"{' — LLM unreachable' if not ai_available else ''}). "
             f"Scan advanced to INTELLIGENCE."
+        )
+
+    asyncio.run(_run())
+
+
+@scan_app.command("test")
+def scan_test(
+    scan_id: str,
+    config: str = typer.Option(..., "--config", "-c"),
+    max_parameters: int = typer.Option(200, help="Cap on how many parameters get parameter-level scanners."),
+) -> None:
+    """Phase 6 — Detection: run deterministic scanners (security headers,
+    information exposure, open redirect, reflected XSS, path traversal,
+    error-based SQLi) against every discovered host/endpoint/parameter, subject to
+    scan mode (docs/architecture.md §29 — PASSIVE/SAFE/ACTIVE gate which scanners
+    run at all). Persists Test/Finding/Evidence records.
+
+    Every finding this produces is a CANDIDATE, never a confirmed vulnerability —
+    confidence is always "low" or "info"/"high" (for objective facts like a missing
+    header), never "confirmed". Verification and correlation are Phase 9.
+
+    Scan must be in INTELLIGENCE. Advances INTELLIGENCE -> PRIORITIZED -> TESTING."""
+    cfg = _load_config(config)
+    configure_logging(cfg.log_level)
+
+    scope = ScopeEngine(allow=cfg.target.scope.allow, deny=cfg.target.scope.deny)
+    rate_limiter = RateLimiter(
+        requests_per_second=cfg.limits.requests_per_second,
+        concurrency=cfg.limits.concurrency,
+        max_requests=cfg.limits.max_requests,
+    )
+
+    async def _run() -> None:
+        engine = get_engine(cfg.storage_path)
+        await init_db(engine)
+        session_factory = make_session_factory(engine)
+
+        async with session_scope(session_factory) as session:
+            scans = ScanRepository(session)
+            scan_record = await scans.get(scan_id)
+            if scan_record is None:
+                typer.echo(f"No such scan: {scan_id}", err=True)
+                raise typer.Exit(code=1)
+            if scan_record.status != ScanState.INTELLIGENCE.value:
+                typer.echo(
+                    f"Scan {scan_id} must be in INTELLIGENCE to test "
+                    f"(currently: {scan_record.status}).",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            target_id = scan_record.target_id
+            mode = scan_record.mode
+
+            lifecycle = ScanLifecycle(ScanState.INTELLIGENCE)
+            lifecycle.advance()  # INTELLIGENCE -> PRIORITIZED
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        # Best-effort scheme reconstruction: reuse the scheme from configured seed
+        # URLs (same limitation already documented for discover-js in Phase 3 —
+        # stored endpoints only have a path, not a full scheme+host URL).
+        default_scheme = "https"
+        if cfg.target.seed_urls:
+            default_scheme = httpx.URL(cfg.target.seed_urls[0]).scheme
+
+        orchestrator = TestOrchestrator(scanners=build_default_scanners(), mode=mode)
+
+        findings_to_persist: list[tuple[str, str | None, object]] = []  # (endpoint_id, parameter_id, NormalizedFinding)
+        total_scanners_run = 0
+        total_scanners_skipped = 0
+        errors: list[str] = []
+        parameters_tested = 0
+
+        async with SentinelHTTPClient(scope=scope, rate_limiter=rate_limiter) as http_client:
+            async with session_scope(session_factory) as session:
+                attack_surface = AttackSurfaceRepository(session)
+                hosts = await attack_surface.list_hosts_for_target(target_id)
+
+                for host in hosts:
+                    host_root = f"{default_scheme}://{host.hostname}/"
+                    host_result = await orchestrator.run_host_level(host_root, http_client)
+                    total_scanners_run += host_result.scanners_run
+                    total_scanners_skipped += host_result.scanners_skipped_mode
+                    errors.extend(host_result.errors)
+                    for finding in host_result.findings:
+                        # Host-level findings aren't tied to one endpoint; attach to
+                        # None here and handle at persistence time via a synthetic
+                        # root endpoint below.
+                        findings_to_persist.append((None, None, finding, host))
+
+                    endpoints = await attack_surface.list_endpoints_for_host(host.id)
+                    for endpoint in endpoints:
+                        endpoint_url = f"{default_scheme}://{host.hostname}{endpoint.path}"
+                        for param in endpoint.parameters:
+                            if parameters_tested >= max_parameters:
+                                break
+                            parameters_tested += 1
+                            param_result = await orchestrator.run_parameter_level(
+                                endpoint_url, endpoint.method, param.name, param.location, http_client
+                            )
+                            total_scanners_run += param_result.scanners_run
+                            total_scanners_skipped += param_result.scanners_skipped_mode
+                            errors.extend(param_result.errors)
+                            for finding in param_result.findings:
+                                findings_to_persist.append((endpoint.id, param.id, finding, None))
+                        if parameters_tested >= max_parameters:
+                            break
+
+        findings_created = 0
+        async with session_scope(session_factory) as session:
+            attack_surface = AttackSurfaceRepository(session)
+            findings_repo = FindingsRepository(session)
+
+            for endpoint_id, parameter_id, finding, host_for_root in findings_to_persist:
+                if endpoint_id is None:
+                    # Host-level finding: attach to a synthetic "/" GET endpoint so
+                    # it still has a valid endpoint_id (Test/Finding both require one).
+                    root_endpoint = await attack_surface.get_or_create_endpoint(
+                        host_for_root.id, "/", "GET", scan_id, source="scanner"
+                    )
+                    endpoint_id = root_endpoint.id
+
+                test_record = await findings_repo.create_test(
+                    scan_id=scan_id,
+                    endpoint_id=endpoint_id,
+                    vulnerability_class=finding.metadata.get("vulnerability_class", "unknown"),
+                    scanner_name=finding.tool_name,
+                    parameter_id=parameter_id,
+                )
+                await findings_repo.create_finding_from_normalized(scan_id, test_record.id, finding)
+                findings_created += 1
+
+            scans = ScanRepository(session)
+            lifecycle = ScanLifecycle(ScanState.PRIORITIZED)
+            lifecycle.advance()  # PRIORITIZED -> TESTING
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        typer.echo(
+            f"Testing complete: {parameters_tested} parameters tested, "
+            f"{total_scanners_run} scanner runs ({total_scanners_skipped} skipped due to "
+            f"scan mode), {findings_created} candidate findings recorded"
+            f"{f', {len(errors)} scanner errors' if errors else ''}. "
+            f"Scan advanced to TESTING."
         )
 
     asyncio.run(_run())

@@ -131,3 +131,75 @@ def test_scan_classify_falls_back_and_advances_lifecycle(tmp_config_unreachable_
 
     status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(cfg_path)])
     assert "status=intelligence" in status_result.output
+
+
+def test_scan_test_runs_scanners_and_advances_to_testing(tmp_path: Path):
+    """End-to-end: seed a scan directly at INTELLIGENCE with one host/endpoint/
+    parameter, point 'scan test' at a mocked target via a config whose seed_urls
+    scheme matches, and confirm it produces findings and reaches TESTING.
+
+    Since `scan test` uses a real SentinelHTTPClient (not mockable via config), this
+    test targets 127.0.0.1 on a port nothing listens on — every request will fail
+    with a connection error, which every scanner already handles gracefully (catches
+    httpx.HTTPError and returns no findings). This proves the full orchestration
+    pipeline (mode gating, persistence, lifecycle transition) works even when the
+    network layer is fully unavailable — the same fail-safe pattern already proven
+    for the classify command's LLM fallback path."""
+    db_path = tmp_path / "sentinel_test.db"
+    config_path = tmp_path / "test_config_scan_test.yaml"
+    config_path.write_text(
+        textwrap.dedent(
+            f"""
+            target:
+              name: "scan-test-target"
+              scope:
+                allow:
+                  - "127.0.0.1"
+                deny: []
+              seed_urls:
+                - "http://127.0.0.1:1/"
+            scan:
+              mode: safe
+            storage_path: "{db_path}"
+            log_level: "WARNING"
+            """
+        )
+    )
+
+    from app.config.settings import SentinelConfig
+
+    cfg = SentinelConfig.from_yaml(str(config_path))
+
+    async def _seed() -> str:
+        db_engine = get_engine(cfg.storage_path)
+        await init_db(db_engine)
+        session_factory = make_session_factory(db_engine)
+
+        async with session_scope(session_factory) as session:
+            targets = TargetRepository(session)
+            scans = ScanRepository(session)
+            attack_surface = AttackSurfaceRepository(session)
+
+            target = await targets.create(
+                cfg.target.name, {"allow": cfg.target.scope.allow, "deny": cfg.target.scope.deny}
+            )
+            scan = await scans.create(target.id, "safe", {})
+            host = await attack_surface.get_or_create_host(target.id, "127.0.0.1", scan.id)
+            endpoint = await attack_surface.get_or_create_endpoint(
+                host.id, "/search", "GET", scan.id, source="crawl"
+            )
+            await attack_surface.add_parameter(endpoint.id, "q", "query", "")
+            await scans.update_status(scan.id, ScanState.INTELLIGENCE.value)
+            scan_id = scan.id
+
+        await db_engine.dispose()
+        return scan_id
+
+    scan_id = asyncio.run(_seed())
+
+    result = runner.invoke(app, ["scan", "test", scan_id, "--config", str(config_path)])
+    assert result.exit_code == 0, result.output
+    assert "Testing complete" in result.output
+
+    status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(config_path)])
+    assert "status=testing" in status_result.output

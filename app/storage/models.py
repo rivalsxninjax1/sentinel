@@ -152,3 +152,44 @@ class Classification(Base):
     reason: Mapped[str] = mapped_column(String(1024), nullable=False)
     source: Mapped[str] = mapped_column(String(16), nullable=False)  # "ai" | "fallback"
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Test(Base):
+    __tablename__ = "tests"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
+    endpoint_id: Mapped[str] = mapped_column(ForeignKey("endpoints.id"), nullable=False)
+    parameter_id: Mapped[str | None] = mapped_column(ForeignKey("parameters.id"), nullable=True)
+    vulnerability_class: Mapped[str] = mapped_column(String(64), nullable=False)
+    scanner_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="completed")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Finding(Base):
+    __tablename__ = "findings"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
+    test_id: Mapped[str] = mapped_column(ForeignKey("tests.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    vulnerability_class: Mapped[str] = mapped_column(String(64), nullable=False)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False)
+    # info | low | medium | high | confirmed — NEVER set to "confirmed" before the
+    # Verification Engine (Phase 9) exists. See docs/architecture.md §22.
+    confidence: Mapped[str] = mapped_column(String(16), nullable=False, default="low")
+    matched_endpoint: Mapped[str] = mapped_column(String(2048), nullable=False)
+    description: Mapped[str] = mapped_column(String(2048), nullable=False)
+    metadata_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Evidence(Base):
+    __tablename__ = "evidence"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    finding_id: Mapped[str] = mapped_column(ForeignKey("findings.id"), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)  # "raw_output" | "request" | "response"
+    content: Mapped[str] = mapped_column(String(4000), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

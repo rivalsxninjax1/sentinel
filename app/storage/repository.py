@@ -13,6 +13,8 @@ from sqlalchemy.orm import selectinload
 from app.storage.models import (
     Classification,
     Endpoint,
+    Evidence,
+    Finding,
     Form,
     Host,
     JavaScriptAsset,
@@ -20,6 +22,7 @@ from app.storage.models import (
     Scan,
     Target,
     Technology,
+    Test,
 )
 
 
@@ -257,5 +260,76 @@ class IntelligenceRepository:
     async def list_for_scan(self, scan_id: str) -> list[Classification]:
         result = await self._session.execute(
             select(Classification).where(Classification.scan_id == scan_id)
+        )
+        return list(result.scalars().all())
+
+
+class FindingsRepository:
+    """Persists Test/Finding/Evidence records produced by the TestOrchestrator
+    (app/core/test_orchestrator.py). Every NormalizedFinding becomes exactly one
+    Finding row plus one Evidence row (the raw_output) — see docs/architecture.md
+    §39 (every finding must carry evidence)."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def create_test(
+        self,
+        scan_id: str,
+        endpoint_id: str,
+        vulnerability_class: str,
+        scanner_name: str,
+        parameter_id: str | None = None,
+        status: str = "completed",
+    ) -> Test:
+        test = Test(
+            scan_id=scan_id,
+            endpoint_id=endpoint_id,
+            parameter_id=parameter_id,
+            vulnerability_class=vulnerability_class,
+            scanner_name=scanner_name,
+            status=status,
+        )
+        self._session.add(test)
+        await self._session.flush()
+        return test
+
+    async def create_finding_from_normalized(
+        self, scan_id: str, test_id: str, finding, confidence: str = "low"
+    ) -> Finding:
+        """`finding` is an app.tools.models.NormalizedFinding — the shared shape
+        produced by both tool adapters (Phase 5) and deterministic scanners
+        (Phase 6)."""
+        record = Finding(
+            scan_id=scan_id,
+            test_id=test_id,
+            title=finding.title,
+            vulnerability_class=finding.metadata.get("vulnerability_class", "unknown"),
+            severity=finding.severity,
+            confidence=finding.metadata.get("confidence", confidence),
+            matched_endpoint=finding.matched_endpoint,
+            description=finding.raw_output[:2000],
+            metadata_json=finding.metadata,
+        )
+        self._session.add(record)
+        await self._session.flush()
+
+        evidence = Evidence(
+            finding_id=record.id, kind="raw_output", content=finding.raw_output[:4000]
+        )
+        self._session.add(evidence)
+        await self._session.flush()
+
+        return record
+
+    async def list_findings_for_scan(self, scan_id: str) -> list[Finding]:
+        result = await self._session.execute(
+            select(Finding).where(Finding.scan_id == scan_id)
+        )
+        return list(result.scalars().all())
+
+    async def list_evidence_for_finding(self, finding_id: str) -> list[Evidence]:
+        result = await self._session.execute(
+            select(Evidence).where(Evidence.finding_id == finding_id)
         )
         return list(result.scalars().all())

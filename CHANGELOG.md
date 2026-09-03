@@ -3,6 +3,82 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.6.0] - Phase 6 - Detection
+### Added
+- `app/scanners/base.py` — `DeterministicScanner` interface + `mode_allows()` (single
+  source of truth for PASSIVE < SAFE < ACTIVE gating).
+- `app/scanners/util.py` — `inject_query_param()`, shared by every parameter-level
+  scanner instead of six slightly-different implementations.
+- Six scanners, each `DeterministicScanner`:
+  - `security_headers.py` — passive; missing CSP/X-Frame-Options/
+    X-Content-Type-Options/HSTS/Referrer-Policy + Server/X-Powered-By banner
+    disclosure. Confidence `high` (absence of a header is a fact, not a guess).
+  - `information_exposure.py` — safe; fixed list of ~9 sensitive paths
+    (`.git/HEAD`, `.env`, backup files), explicitly never flags
+    `.well-known/security.txt` (a benign/expected file).
+  - `open_redirect.py` — safe; single request per candidate parameter with an
+    external test domain, checks `Location` header.
+  - `reflected_xss.py` — safe; unique-marker raw-reflection heuristic. Explicitly
+    documented as the "cheap first pass," complementing (not replacing) the
+    context-aware `xsstrike` tool adapter from Phase 5.
+  - `path_traversal.py` — active; `../../etc/passwd`-style payloads,
+    `root:x:0:0` indicator match.
+  - `sqli_error_based.py` — active; single-quote injection + known DB
+    error-signature grep. Complements the `sqlmap` tool adapter for real
+    boolean/time/UNION-based coverage.
+- `app/scanners/registry.py` — `build_default_scanners()`.
+- `app/core/test_orchestrator.py` — `TestOrchestrator`: the sole authority on
+  whether a scanner runs, gated by scan mode; runs host-level scanners once per
+  host, parameter-level scanners once per parameter (with a redirect-name heuristic
+  additionally gating `open_redirect`); isolates and records scanner exceptions
+  without aborting the run. No code path from `app/llm/`/`app/intelligence/` into
+  this file — matches the same AI-advisory-only boundary from Phase 4.
+- `app/storage/models.py` — `Test`, `Finding`, `Evidence` tables (the remaining
+  entities from docs/architecture.md §8's schema, populated for the first time).
+  `Finding.confidence` is never set to `"confirmed"` anywhere in this phase — reserved
+  for Phase 9's Verification Engine.
+- `app/storage/repository.py` — `FindingsRepository`
+  (`create_test`/`create_finding_from_normalized`/`list_findings_for_scan`/
+  `list_evidence_for_finding`). `create_finding_from_normalized` accepts the same
+  `NormalizedFinding` shape tool adapters (Phase 5) already produce — scanners and
+  tool adapters write to the same table through the same method.
+- CLI: `sentinel scan test <scan_id>` — runs the full orchestration pass across every
+  host/endpoint/parameter (capped by `--max-parameters`, default 200), persists
+  results, advances INTELLIGENCE -> PRIORITIZED -> TESTING.
+- `docs/scanners.md` filled in properly (was a Phase 0 stub) — full coverage table,
+  explicit "not automatically detectable" list, confidence discipline explanation.
+- Tests: `test_scanners_base.py`, `test_scanners_util.py`, one test file per scanner
+  (mocked `SentinelHTTPClient` via `httpx.MockTransport` — same proven pattern from
+  Phases 2-3), `test_test_orchestrator.py` (mode-gating, redirect-heuristic gating,
+  exception isolation), extended `test_attack_surface_repository.py` and
+  `test_cli_smoke.py` (full `scan test` run against an intentionally-unreachable
+  target, proving every scanner's error handling and the full
+  orchestration-through-lifecycle-transition pipeline work even with zero successful
+  HTTP responses) — 34 new tests (160 total, all passing).
+- `pyproject.toml` — `python_classes` restricted in pytest config so pytest doesn't
+  try (and fail) to collect application classes named `Test*` (e.g.
+  `TestOrchestrator`, the `Test` ORM model) as test classes.
+
+### Notes
+- `Classification` rows from Phase 4 (AI-recommended tests) are not yet read by
+  `TestOrchestrator` — it runs its fixed scanner set against every parameter, subject
+  to mode. Using AI recommendations to prioritize/narrow that set is reasonable
+  future work, not required for "detection exists and works."
+- Host-level findings (`security_headers`, `information_exposure`) are attached to a
+  synthetic `/` GET endpoint (`source="scanner"`) since `Test`/`Finding` both require
+  a real `endpoint_id` and these scanners aren't tied to one specific discovered
+  endpoint.
+- Same scheme-reconstruction limitation already flagged in Phase 3's discover-js:
+  `scan test` derives scheme from `target.seed_urls[0]`, not per-host — fine for the
+  common single-scheme case, a real limitation for mixed-scheme targets.
+- I have no live target to test scanners against for real true/false positive rates
+  in my sandbox — every scanner is verified against realistic *simulated* responses
+  via `httpx.MockTransport` (e.g. an app that echoes a query param unescaped, an app
+  that returns a MySQL error string), not a real vulnerable application. The `lab/`
+  directory (mandatory per docs/architecture.md §41) still doesn't exist — building
+  it against these six scanners would be a natural next step whenever you want real
+  regression coverage rather than simulated coverage.
+
 ## [0.5.0] - Phase 5 - Tool Orchestration
 ### Added
 - `app/tools/base.py` — `SecurityToolAdapter` ABC: `run()` provides shared,
@@ -51,6 +127,13 @@ Format loosely follows Keep a Changelog; versions are pre-1.0 during phased deve
 - Adapters are NOT wired into scan execution yet — nothing currently decides *when*
   to run one based on a scan's Phase 4 classifications. That orchestration/decision
   logic is Phase 6+, deliberately deferred (see docs/tools.md's closing note).
+- I have no real installations of nuclei/ffuf/katana/XSStrike/sqlmap in this sandbox
+  (no network access to fetch them here), so `build_command`/`parse`/`normalize` are
+  verified against each tool's documented output format and an injected fake process
+  runner, not a live binary. `httpx` was the one adapter I could partially
+  cross-check against a real installed binary — and that check is exactly what
+  surfaced the naming collision. Worth running `sentinel tools list` on your Mac with
+  real tools installed before trusting the live paths for the other five.
 
 ## [0.4.0] - Phase 4 - Ollama Intelligence
 ### Added

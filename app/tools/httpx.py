@@ -4,7 +4,8 @@ NOT to be confused with the Python `httpx` library used throughout the rest of
 SENTINEL (see docs/tools.md's naming note) — this module only shells out to the
 `httpx` binary; it never imports the Python package.
 
-License/version: see docs/tools.md.
+License/version: see docs/tools.md (filled in when the binary is actually installed
+and pinned — this adapter runs in "unavailable" mode gracefully until then).
 """
 
 from __future__ import annotations
