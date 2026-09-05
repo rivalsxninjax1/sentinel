@@ -1,11 +1,11 @@
 """TestOrchestrator — the sole authority on whether a deterministic scanner actually
-runs against a given endpoint/parameter.
+runs against a given endpoint/parameter/form.
 
 Per docs/architecture.md §44/§5: AI recommendations (Phase 4 `Classification` rows)
 may inform *which* parameters get extra scanner attention, but nothing in this class
 takes instructions from the AI directly — it only ever reads scan configuration
-(mode) and attack-surface facts (parameter names) that the orchestrator itself
-decided were worth checking. There is no code path from app/llm/ or
+(mode) and attack-surface facts (parameter names, form fields) that the orchestrator
+itself decided were worth checking. There is no code path from app/llm/ or
 app/intelligence/reasoning.py into this file.
 """
 
@@ -20,8 +20,10 @@ from app.tools.models import NormalizedFinding
 
 logger = get_logger(__name__)
 
-_HOST_LEVEL_SCANNERS = {"security_headers", "information_exposure"}
+_HOST_LEVEL_SCANNERS = {"security_headers", "information_exposure", "cors", "jwt_weakness"}
+_FORM_LEVEL_SCANNERS = {"csrf", "file_upload", "xxe"}
 _REDIRECT_PARAM_HINTS = ("url", "redirect", "next", "return", "dest", "continue", "target")
+_SSRF_PARAM_HINTS = ("url", "uri", "link", "src", "path", "target", "endpoint", "callback", "webhook", "fetch")
 
 
 @dataclass
@@ -41,7 +43,7 @@ class TestOrchestrator:
         self, host_root_url: str, http_client: SentinelHTTPClient
     ) -> OrchestrationResult:
         """Runs scanners that operate once per host (security headers, information
-        exposure) rather than per-parameter."""
+        exposure, CORS, JWT) rather than per-parameter."""
         result = OrchestrationResult()
         target = ScanTarget(url=host_root_url, method="GET")
 
@@ -70,9 +72,30 @@ class TestOrchestrator:
         )
 
         for scanner in self._scanners:
-            if scanner.name in _HOST_LEVEL_SCANNERS:
+            if scanner.name in _HOST_LEVEL_SCANNERS or scanner.name in _FORM_LEVEL_SCANNERS:
                 continue
             if scanner.name == "open_redirect" and not self._looks_like_redirect_param(parameter_name):
+                continue
+            if scanner.name == "ssrf" and not self._looks_like_ssrf_param(parameter_name):
+                continue
+            await self._run_one(scanner, target, http_client, result)
+
+        return result
+
+    async def run_form_level(
+        self,
+        endpoint_url: str,
+        method: str,
+        form_fields: list[dict],
+        http_client: SentinelHTTPClient,
+    ) -> OrchestrationResult:
+        """Runs scanners that need the whole form's field structure (CSRF, file
+        upload, XXE) rather than a single parameter."""
+        result = OrchestrationResult()
+        target = ScanTarget(url=endpoint_url, method=method, form_fields=form_fields)
+
+        for scanner in self._scanners:
+            if scanner.name not in _FORM_LEVEL_SCANNERS:
                 continue
             await self._run_one(scanner, target, http_client, result)
 
@@ -106,3 +129,8 @@ class TestOrchestrator:
     def _looks_like_redirect_param(name: str) -> bool:
         lowered = name.lower()
         return any(hint in lowered for hint in _REDIRECT_PARAM_HINTS)
+
+    @staticmethod
+    def _looks_like_ssrf_param(name: str) -> bool:
+        lowered = name.lower()
+        return any(hint in lowered for hint in _SSRF_PARAM_HINTS)

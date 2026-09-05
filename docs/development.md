@@ -16,8 +16,8 @@ and tested before the next one starts. No phase jumps ahead into later functiona
 | 4 | Ollama Intelligence | ✅ |
 | 5 | Tool Orchestration | ✅ |
 | 6 | Detection (XSS, SQLi, path traversal, open redirect, headers, info exposure) | ✅ |
-| 7 | Advanced Detection (SSRF, SSTI, XXE, upload, CSRF, CORS, IDOR/BOLA, JWT) | ⏳ next |
-| 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | not started |
+| 7 | Advanced Detection (SSRF, SSTI, XXE, upload, CSRF, CORS, IDOR/BOLA, JWT) | ✅ |
+| 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | ⏳ next |
 | 9 | Verification & Correlation | not started |
 | 10 | Reporting | not started |
 | 11 | Dashboard | not started |

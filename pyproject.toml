@@ -1,6 +1,6 @@
 [project]
 name = "sentinel"
-version = "0.6.0"
+version = "0.7.0"
 description = "AI-assisted context-aware web application security testing and vulnerability verification platform (authorized use only)."
 readme = "README.md"
 requires-python = ">=3.11"

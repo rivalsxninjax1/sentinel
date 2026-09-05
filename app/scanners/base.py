@@ -35,6 +35,7 @@ class ScanTarget:
     method: str = "GET"
     parameter_name: str | None = None
     parameter_location: str | None = None  # "query" | "form"
+    form_fields: list[dict] | None = None  # for form-aware scanners (CSRF, file upload, XXE)
 
 
 class DeterministicScanner(ABC):

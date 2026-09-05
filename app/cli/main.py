@@ -640,6 +640,19 @@ def scan_test(
                         if parameters_tested >= max_parameters:
                             break
 
+                        for form in endpoint.forms:
+                            form_fields = [
+                                {"name": f.get("name", "")} for f in (form.fields_json or [])
+                            ]
+                            form_result = await orchestrator.run_form_level(
+                                endpoint_url, form.method, form_fields, http_client
+                            )
+                            total_scanners_run += form_result.scanners_run
+                            total_scanners_skipped += form_result.scanners_skipped_mode
+                            errors.extend(form_result.errors)
+                            for finding in form_result.findings:
+                                findings_to_persist.append((endpoint.id, None, finding, None))
+
         findings_created = 0
         async with session_scope(session_factory) as session:
             attack_surface = AttackSurfaceRepository(session)

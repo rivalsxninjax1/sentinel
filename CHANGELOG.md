@@ -3,6 +3,83 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.7.0] - Phase 7 - Advanced Detection
+### Added
+- Eight new scanners, each `DeterministicScanner`:
+  - `ssrf.py` (active, parameter-level) — cloud-metadata/internal-service probes,
+    reflected-response signature match. **Explicitly cannot catch blind SSRF**
+    without real OOB infrastructure (docs/architecture.md §27, not built) — this
+    limitation is stated in the module docstring and in every finding's metadata
+    (`known_gap`), not just in docs.
+  - `ssti.py` (active, parameter-level) — 5 template-engine-syntax probes
+    (`{{7*7}}`/`${7*7}`/`<%= 7*7 %>`/`#{7*7}`/`*{7*7}`), requires the *evaluated*
+    result to appear (and the literal payload to NOT appear) to avoid confusing
+    evaluation with mere reflection.
+  - `idor_candidate.py` (safe, parameter-level) — **honestly limited**: flags
+    object-identifier-shaped parameter names as informational candidates only.
+    Explicitly does not perform real IDOR/BOLA testing, which needs a multi-identity
+    `AuthenticationContext` system (docs/architecture.md §25-26) that doesn't exist
+    in any phase built so far — documented as the single biggest gap in current
+    coverage rather than glossed over.
+  - `cors.py` (safe, host-level) — spoofed-Origin reflection check, severity scales
+    with `Access-Control-Allow-Credentials`.
+  - `jwt_weakness.py` (safe, host-level) — passive JWT discovery + structural
+    analysis: `alg: none` detection, HS256 signature verification against ~10
+    well-known weak secrets (legitimate local HMAC check, never forges/replays a
+    token against the server), missing `exp` claim.
+  - `csrf.py` (safe, form-level — new orchestration category) — anti-CSRF token
+    field-name check for state-changing forms, SameSite cookie attribute check.
+  - `file_upload.py` (active, form-level) — only on upload-hinting forms; uploads a
+    benign marker file with a double extension, fetches it back, checks
+    Content-Type for signs of server-side execution. **Never uploads executable
+    content of any kind**, and the test file is **not automatically cleaned up** —
+    flagged in every finding's metadata (`cleanup_required`) and in docs/scanners.md.
+  - `xxe.py` (active, form-level) — local-file-read XXE payload as raw POST/PUT body
+    to form-bearing endpoints, traversal-indicator signature match (same technique
+    as Phase 6's `path_traversal`).
+- `app/scanners/base.py` — `ScanTarget` extended with optional `form_fields` for the
+  three new form-aware scanners.
+- `app/core/test_orchestrator.py` — new `run_form_level()` method and category;
+  host-level set grew to include `cors`/`jwt_weakness`; `ssrf` gated by a
+  URL-hinting parameter-name heuristic (mirrors `open_redirect`'s existing pattern).
+- `app/scanners/registry.py` — all 14 scanners now registered.
+- CLI: `sentinel scan test` now also runs the form-level pass against every
+  discovered form.
+- `docs/scanners.md` — full coverage table extended, with explicit, prominent
+  "not automatically detectable" callouts for blind SSRF, real IDOR/BOLA, JWT
+  forgery/replay, and file-upload exploitation — matching docs/architecture.md §13's
+  required "automatically detectable vs. requires X" distinction.
+- Tests: one file per new scanner (`test_ssrf_scanner.py`, `test_ssti_scanner.py`,
+  `test_idor_candidate_scanner.py`, `test_cors_scanner.py`,
+  `test_jwt_weakness_scanner.py` — including real HMAC-SHA256 verification against
+  fabricated tokens, not just string matching — `test_csrf_scanner.py`,
+  `test_file_upload_scanner.py`, `test_xxe_scanner.py`), rewritten
+  `test_test_orchestrator.py` (updated counts for the expanded registry, new
+  form-level dispatch coverage), extended `test_cli_smoke.py` (the existing
+  unreachable-target `scan test` smoke test now also seeds a form, exercising the
+  new form-level pass's graceful-failure path) — 38 new/updated tests (198 total,
+  all passing).
+
+### Notes
+- **IDOR/BOLA is the phase's most important documented limitation, not an
+  afterthought**: `idor_candidate` is explicitly informational-only. Building real
+  IDOR/BOLA detection requires the `AuthenticationContext` multi-identity system
+  from docs/architecture.md §26, which no phase has built yet — that's reasonable
+  future work, not something to fake with a heavier-sounding scanner name.
+- SSRF detection is reflection-based only; blind SSRF requires the OOB system from
+  §27, also not built yet. Both gaps are stated in code (module docstrings, finding
+  metadata) as well as docs — the goal is that nobody downstream mistakes a
+  candidate finding for a confirmed one just because the docs weren't in front of
+  them.
+- File upload testing leaves a benign test file on the target if the form actually
+  accepts uploads — no automated cleanup exists. Worth being aware of before running
+  `scan test` in ACTIVE mode against a target where you can't easily remove
+  `sentinel_test.jpg.php` yourself afterward.
+- Same "no live target in my sandbox" caveat as Phase 6: every new scanner is
+  verified against realistic simulated responses (fabricated JWTs with real HMAC
+  signatures, simulated CORS/upload/XXE response shapes) via `httpx.MockTransport`,
+  not a real vulnerable application.
+
 ## [0.6.0] - Phase 6 - Detection
 ### Added
 - `app/scanners/base.py` — `DeterministicScanner` interface + `mode_allows()` (single

@@ -189,6 +189,9 @@ def test_scan_test_runs_scanners_and_advances_to_testing(tmp_path: Path):
                 host.id, "/search", "GET", scan.id, source="crawl"
             )
             await attack_surface.add_parameter(endpoint.id, "q", "query", "")
+            await attack_surface.add_form(
+                endpoint.id, "POST", "http://127.0.0.1:1/search", [{"name": "q"}]
+            )
             await scans.update_status(scan.id, ScanState.INTELLIGENCE.value)
             scan_id = scan.id
 
