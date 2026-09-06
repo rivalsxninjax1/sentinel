@@ -17,6 +17,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from app.core.auth_context import AuthenticationContext
 from app.core.http_client import SentinelHTTPClient
 from app.tools.models import NormalizedFinding
 
@@ -36,6 +37,7 @@ class ScanTarget:
     parameter_name: str | None = None
     parameter_location: str | None = None  # "query" | "form"
     form_fields: list[dict] | None = None  # for form-aware scanners (CSRF, file upload, XXE)
+    auth_contexts: list[AuthenticationContext] | None = None  # for identity_authorization
 
 
 class DeterministicScanner(ABC):

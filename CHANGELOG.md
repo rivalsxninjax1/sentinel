@@ -3,6 +3,79 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.8.0] - Phase 8 - API Security
+### Added
+- `app/core/auth_context.py` — `AuthenticationContext`/`AuthContextConfig`:
+  named identities for cross-identity authorization testing. Credential VALUES are
+  never stored in config, the database, or logs — only an environment variable NAME
+  is configured; the value is resolved from the environment at request time.
+  `MissingCredentialError` lets callers treat an unconfigured identity as
+  unavailable rather than fatal.
+- `app/config/settings.py` — `AuthContextEntry` + `TargetConfig.auth_contexts`
+  (defaults to empty list — fully backward compatible with every existing config).
+- `app/scanners/identity_authorization.py` — **`IdentityAuthorizationScanner`, the
+  real upgrade to Phase 7's honestly-limited `idor_candidate`.** With 2+ configured
+  auth contexts, fetches the same URL as every identity and flags when all receive
+  indistinguishable 200 responses (the exact anomaly pattern from
+  docs/architecture.md §25). Without auth contexts configured, degrades to zero
+  findings — `idor_candidate` remains registered and keeps running regardless, so
+  behavior is unchanged for anyone not using this feature.
+- `app/scanners/graphql_introspection.py` (safe, endpoint-level) — minimal
+  introspection query against any endpoint with "graphql" in its URL.
+- `app/scanners/websocket_auth.py` (safe, endpoint-level) — anonymous WS handshake
+  attempt against `ws://`/`wss://` endpoints; `websockets` is an optional dependency
+  with the same graceful-degradation pattern as Playwright (Phase 3).
+- `app/scanners/http_method_enum.py` (safe, endpoint-level) — OPTIONS-only method
+  enumeration via the Allow header. **Never sends PUT/DELETE/PATCH** to check if
+  they're accepted (would risk real data modification) — a dedicated test asserts
+  only OPTIONS is ever sent.
+- `app/scanners/mass_assignment_candidate.py` (active, form-level) — submits a
+  form's real fields plus one extra `role=admin` field, flags if reflected back.
+- `app/scanners/base.py` — `ScanTarget.auth_contexts` field.
+- `app/core/test_orchestrator.py` — new `run_endpoint_level()` category (for
+  scanners needing just a URL/method, no parameter or form) and `auth_contexts`
+  constructor parameter threaded through to every parameter-level scan.
+- `app/cli/main.py` (`scan test`) — **bug fix + new pass**: endpoints whose `path`
+  stores a full URL (WebSocket/absolute-URL routes discovered via Phase 3's JS
+  intelligence) were being double-prefixed with scheme+host, producing garbage URLs
+  like `https://app.example.comwss://...`; now detected and used as-is. Also loads
+  `target.auth_contexts` from config and wires them into the orchestrator, and adds
+  the endpoint-level scanner pass alongside the existing host/parameter/form passes.
+- `pyproject.toml` — new `websocket` optional-dependency group (`websockets`).
+- `docs/scanners.md` — coverage table extended; IDOR/BOLA limitation section
+  rewritten to describe the conditional real-testing upgrade; new "Multi-identity
+  authorization testing" section with full config example.
+- Tests: `test_auth_context.py`, `test_identity_authorization_scanner.py` (including
+  the exact anomaly-vs-normal-pattern distinction — flags when both identities get
+  200, does NOT flag when one is denied, does NOT flag when response bodies differ
+  substantially), `test_graphql_introspection_scanner.py`,
+  `test_websocket_auth_scanner.py` (URL-gating and library-unavailable paths tested
+  directly; a monkeypatched fake WS module tests the handshake-success path since a
+  real WS server isn't available in this sandbox), `test_http_method_enum_scanner.py`
+  (including an explicit assertion that only OPTIONS is ever sent),
+  `test_mass_assignment_candidate_scanner.py`, rewritten `test_test_orchestrator.py`
+  (updated counts for the now-19-scanner registry, new endpoint-level dispatch
+  coverage), extended `test_settings.py` — 33 new/updated tests (231 total, all
+  passing).
+
+### Notes
+- **The endpoint-URL bug this phase found and fixed was real, not hypothetical** —
+  Phase 3's discover-js command stores full URLs (not paths) for WebSocket/absolute
+  routes in `Endpoint.path`, and Phase 6/7's `scan test` command was unconditionally
+  concatenating `scheme://host + path` for every endpoint, silently producing
+  malformed URLs for that subset. Every scanner run against those endpoints was
+  therefore hitting a URL that never existed and getting harmless-looking connection
+  errors — not a crash, just quietly wrong. Worth specifically re-testing
+  `discover-js` -> `scan test` against a real JS-heavy target now that this is fixed.
+- `identity_authorization` and `idor_candidate` are BOTH registered and BOTH run —
+  the new scanner doesn't replace the old one, it adds a stronger signal that only
+  activates when the operator has actually configured credentials.
+- Same "no live target" caveat as Phases 6-7: every new scanner verified against
+  simulated responses via `httpx.MockTransport` (including simulated distinct-vs-
+  identical authenticated response bodies for the identity comparison logic) or,
+  for WebSocket, a monkeypatched fake module — not a real vulnerable application or
+  a real WS server.
+
 ## [0.7.0] - Phase 7 - Advanced Detection
 ### Added
 - Eight new scanners, each `DeterministicScanner`:

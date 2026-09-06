@@ -8,6 +8,18 @@ target:
     deny: []
   seed_urls:
     - "https://app.example-authorized-target.test/"
+  # Optional — enables real cross-identity IDOR/BOLA testing (Phase 8). Credential
+  # VALUES are never written here — only the name of an environment variable that
+  # must hold the actual value at scan time (e.g. `export SENTINEL_AUTH_USER_A="Bearer ..."`).
+  # auth_contexts:
+  #   - label: user_a
+  #     kind: header       # header | cookie
+  #     name: Authorization
+  #     env_var: SENTINEL_AUTH_USER_A
+  #   - label: user_b
+  #     kind: header
+  #     name: Authorization
+  #     env_var: SENTINEL_AUTH_USER_B
 
 scan:
   mode: passive   # passive | safe | active

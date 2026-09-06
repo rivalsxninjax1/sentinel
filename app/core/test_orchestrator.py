@@ -4,15 +4,16 @@ runs against a given endpoint/parameter/form.
 Per docs/architecture.md §44/§5: AI recommendations (Phase 4 `Classification` rows)
 may inform *which* parameters get extra scanner attention, but nothing in this class
 takes instructions from the AI directly — it only ever reads scan configuration
-(mode) and attack-surface facts (parameter names, form fields) that the orchestrator
-itself decided were worth checking. There is no code path from app/llm/ or
-app/intelligence/reasoning.py into this file.
+(mode, configured auth identities) and attack-surface facts (parameter names, form
+fields) that the orchestrator itself decided were worth checking. There is no code
+path from app/llm/ or app/intelligence/reasoning.py into this file.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.core.auth_context import AuthenticationContext
 from app.core.http_client import SentinelHTTPClient
 from app.core.logging import get_logger
 from app.scanners.base import DeterministicScanner, ScanTarget, mode_allows
@@ -21,7 +22,8 @@ from app.tools.models import NormalizedFinding
 logger = get_logger(__name__)
 
 _HOST_LEVEL_SCANNERS = {"security_headers", "information_exposure", "cors", "jwt_weakness"}
-_FORM_LEVEL_SCANNERS = {"csrf", "file_upload", "xxe"}
+_FORM_LEVEL_SCANNERS = {"csrf", "file_upload", "xxe", "mass_assignment_candidate"}
+_ENDPOINT_LEVEL_SCANNERS = {"graphql_introspection", "websocket_auth", "http_method_enum"}
 _REDIRECT_PARAM_HINTS = ("url", "redirect", "next", "return", "dest", "continue", "target")
 _SSRF_PARAM_HINTS = ("url", "uri", "link", "src", "path", "target", "endpoint", "callback", "webhook", "fetch")
 
@@ -35,9 +37,15 @@ class OrchestrationResult:
 
 
 class TestOrchestrator:
-    def __init__(self, scanners: list[DeterministicScanner], mode: str) -> None:
+    def __init__(
+        self,
+        scanners: list[DeterministicScanner],
+        mode: str,
+        auth_contexts: list[AuthenticationContext] | None = None,
+    ) -> None:
         self._scanners = scanners
         self._mode = mode
+        self._auth_contexts = auth_contexts or []
 
     async def run_host_level(
         self, host_root_url: str, http_client: SentinelHTTPClient
@@ -49,6 +57,23 @@ class TestOrchestrator:
 
         for scanner in self._scanners:
             if scanner.name not in _HOST_LEVEL_SCANNERS:
+                continue
+            await self._run_one(scanner, target, http_client, result)
+
+        return result
+
+    async def run_endpoint_level(
+        self, endpoint_url: str, method: str, http_client: SentinelHTTPClient
+    ) -> OrchestrationResult:
+        """Runs scanners that need just an endpoint URL/method with no specific
+        parameter or form (GraphQL introspection, WebSocket handshake auth, HTTP
+        method enumeration). Each of these self-gates on URL shape (e.g. GraphQL
+        introspection only runs if "graphql" is in the URL)."""
+        result = OrchestrationResult()
+        target = ScanTarget(url=endpoint_url, method=method)
+
+        for scanner in self._scanners:
+            if scanner.name not in _ENDPOINT_LEVEL_SCANNERS:
                 continue
             await self._run_one(scanner, target, http_client, result)
 
@@ -69,10 +94,15 @@ class TestOrchestrator:
             method=method,
             parameter_name=parameter_name,
             parameter_location=parameter_location,
+            auth_contexts=self._auth_contexts,
         )
 
         for scanner in self._scanners:
-            if scanner.name in _HOST_LEVEL_SCANNERS or scanner.name in _FORM_LEVEL_SCANNERS:
+            if (
+                scanner.name in _HOST_LEVEL_SCANNERS
+                or scanner.name in _FORM_LEVEL_SCANNERS
+                or scanner.name in _ENDPOINT_LEVEL_SCANNERS
+            ):
                 continue
             if scanner.name == "open_redirect" and not self._looks_like_redirect_param(parameter_name):
                 continue
@@ -90,7 +120,7 @@ class TestOrchestrator:
         http_client: SentinelHTTPClient,
     ) -> OrchestrationResult:
         """Runs scanners that need the whole form's field structure (CSRF, file
-        upload, XXE) rather than a single parameter."""
+        upload, XXE, mass assignment) rather than a single parameter."""
         result = OrchestrationResult()
         target = ScanTarget(url=endpoint_url, method=method, form_fields=form_fields)
 

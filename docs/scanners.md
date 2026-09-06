@@ -22,6 +22,11 @@ rate limiting are already enforced by the HTTP client itself.
 | `csrf` | `csrf` | safe | For POST/PUT/DELETE/PATCH forms: checks for an anti-CSRF token field by name; checks Set-Cookie for missing/permissive SameSite | low-medium |
 | `file_upload` | `unsafe_file_upload` | active | Only on upload-hinting forms: uploads a benign file with a double extension (`.jpg.php`), fetches it back, checks whether Content-Type suggests server-side execution | low-critical |
 | `xxe` | `xxe` | active | Sends a local-file-read XXE payload as the raw POST/PUT body to endpoints known to accept a form body, checks for a traversal-indicator signature | critical (rare hit) |
+| `identity_authorization` | `idor_bola` | active | **Real cross-identity testing** (requires 2+ configured `auth_contexts`): fetches the same URL as every configured identity, flags if all get 200 with similar bodies | low |
+| `graphql_introspection` | `graphql_introspection` | safe | Sends a minimal introspection query to any endpoint with "graphql" in its URL, flags if the schema is returned | high |
+| `websocket_auth` | `websocket_authorization` | safe | Attempts a WS handshake with no credentials on `ws://`/`wss://` endpoints, flags if accepted (optional dependency: `websockets`) | low |
+| `http_method_enum` | `http_method_enumeration` | safe | Sends OPTIONS only (never PUT/DELETE/PATCH), flags notable methods in the Allow header | high (Allow header content is a fact) |
+| `mass_assignment_candidate` | `mass_assignment` | active | Submits a form plus one extra `role=admin` field never part of the discovered form, flags if reflected back | low |
 
 **Explicitly NOT automatically detectable by these scanners** (per
 docs/architecture.md §13's required distinction):
@@ -29,13 +34,17 @@ docs/architecture.md §13's required distinction):
   context-aware and DOM analysis)
 - Blind/boolean/time-based/UNION SQLi (error-based only — see `sqlmap` tool adapter
   for real coverage)
-- **Real IDOR/BOLA** — `idor_candidate` only flags parameter *names* that look like
-  object identifiers. Confirming actual broken object-level authorization requires
-  comparing access across multiple authenticated identities (anonymous/USER_A/
-  USER_B/ADMIN — docs/architecture.md §25), which needs an `AuthenticationContext`
-  system SENTINEL does not have yet (§26). This is the single biggest, most
-  deliberately-flagged gap in current coverage — don't mistake an `idor_candidate`
-  finding for a confirmed vulnerability, it is a to-do marker.
+- **Real IDOR/BOLA — now conditionally available (Phase 8):** if the scan config
+  declares 2+ `target.auth_contexts` (see docs/architecture.md §25/§26 and
+  `app/core/auth_context.py`), `identity_authorization` performs genuine
+  cross-identity comparison: fetching the same URL as each configured identity and
+  flagging when every identity receives indistinguishable 200 responses. Without
+  auth contexts configured (the default), only `idor_candidate`'s
+  name-heuristic-only flagging runs, exactly as in Phase 7. Even with identities
+  configured, this still doesn't confirm true object ownership — see
+  `identity_authorization`'s module docstring for the exact limitation. It is a
+  meaningfully stronger signal than Phase 7's placeholder, not a complete IDOR
+  testing framework.
 - **Blind SSRF** — `ssrf` only catches cases where the fetched internal resource's
   content is reflected back in the response. A target that fetches a URL but never
   shows you anything (blind SSRF) needs a real out-of-band callback/correlation
@@ -92,11 +101,48 @@ docs/architecture.md §22.
   `dest`, `continue`, `target`) and `ssrf` gated by a similar URL-hinting heuristic
   (`url`, `uri`, `link`, `src`, `path`, `target`, `endpoint`, `callback`, `webhook`,
   `fetch`) so they don't fire on every parameter regardless of relevance.
-- runs form-level scanners (`csrf`, `file_upload`, `xxe`) once per discovered form,
-  passing the form's field names and method — these need the whole form's structure,
-  not a single parameter.
+- runs form-level scanners (`csrf`, `file_upload`, `xxe`, `mass_assignment_candidate`)
+  once per discovered form, passing the form's field names and method — these need
+  the whole form's structure, not a single parameter.
+- runs endpoint-level scanners (`graphql_introspection`, `websocket_auth`,
+  `http_method_enum` — Phase 8) once per discovered endpoint, needing just a URL and
+  method with no specific parameter or form. Each self-gates on URL shape (GraphQL
+  introspection only fires on URLs containing "graphql"; WebSocket auth only on
+  `ws://`/`wss://` URLs).
 - isolates scanner exceptions — one scanner's bug is logged and recorded, never
   aborts the rest of the run.
+
+## Multi-identity authorization testing (Phase 8)
+
+`target.auth_contexts` (see `configs/example.yaml`) declares named identities for
+cross-identity IDOR/BOLA testing. Each entry names an environment variable —
+**never the credential value itself** — that must hold a real header value or cookie
+value at scan time:
+
+```yaml
+target:
+  auth_contexts:
+    - label: user_a
+      kind: header
+      name: Authorization
+      env_var: SENTINEL_AUTH_USER_A
+    - label: user_b
+      kind: header
+      name: Authorization
+      env_var: SENTINEL_AUTH_USER_B
+```
+
+```bash
+export SENTINEL_AUTH_USER_A="Bearer eyJ..."
+export SENTINEL_AUTH_USER_B="Bearer eyJ..."
+sentinel scan test <scan_id> --config configs/example.yaml
+```
+
+If an environment variable isn't set at scan time, `identity_authorization` treats
+that identity as unavailable (logs and skips it) rather than failing the scan — the
+same graceful-degradation pattern used for Ollama (Phase 4) and Playwright
+(Phase 3). With fewer than 2 available identities, the scanner returns no findings,
+identical to having no `auth_contexts` configured at all.
 
 **Not yet wired**: `Classification` rows from Phase 4 (AI-recommended tests) aren't
 read by the orchestrator yet. The orchestrator currently runs its fixed scanner set

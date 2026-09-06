@@ -25,6 +25,7 @@ from app.core.http_client import SentinelHTTPClient
 from app.core.lifecycle import InvalidTransition, ScanLifecycle, ScanState
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limiter import RateLimiter
+from app.core.auth_context import AuthContextConfig, build_contexts
 from app.core.test_orchestrator import TestOrchestrator
 from app.crawler.browser import BrowserDiscovery, BrowserEngine, BrowserUnavailable
 from app.crawler.crawler import Crawler
@@ -597,7 +598,15 @@ def scan_test(
         if cfg.target.seed_urls:
             default_scheme = httpx.URL(cfg.target.seed_urls[0]).scheme
 
-        orchestrator = TestOrchestrator(scanners=build_default_scanners(), mode=mode)
+        auth_contexts = build_contexts(
+            [
+                AuthContextConfig(kind=a.kind, label=a.label, name=a.name, env_var=a.env_var)
+                for a in cfg.target.auth_contexts
+            ]
+        )
+        orchestrator = TestOrchestrator(
+            scanners=build_default_scanners(), mode=mode, auth_contexts=auth_contexts
+        )
 
         findings_to_persist: list[tuple[str, str | None, object]] = []  # (endpoint_id, parameter_id, NormalizedFinding)
         total_scanners_run = 0
@@ -624,7 +633,26 @@ def scan_test(
 
                     endpoints = await attack_surface.list_endpoints_for_host(host.id)
                     for endpoint in endpoints:
-                        endpoint_url = f"{default_scheme}://{host.hostname}{endpoint.path}"
+                        # Endpoints discovered via JS intelligence (Phase 3) for
+                        # WebSocket/absolute-URL routes store the FULL URL in
+                        # `path`, not a relative path — see
+                        # app/intelligence/javascript.py's websocket_endpoints and
+                        # the discover-js CLI command. Detect and use as-is rather
+                        # than double-prefixing with scheme+host.
+                        if endpoint.path.startswith(("http://", "https://", "ws://", "wss://")):
+                            endpoint_url = endpoint.path
+                        else:
+                            endpoint_url = f"{default_scheme}://{host.hostname}{endpoint.path}"
+
+                        endpoint_result = await orchestrator.run_endpoint_level(
+                            endpoint_url, endpoint.method, http_client
+                        )
+                        total_scanners_run += endpoint_result.scanners_run
+                        total_scanners_skipped += endpoint_result.scanners_skipped_mode
+                        errors.extend(endpoint_result.errors)
+                        for finding in endpoint_result.findings:
+                            findings_to_persist.append((endpoint.id, None, finding, None))
+
                         for param in endpoint.parameters:
                             if parameters_tested >= max_parameters:
                                 break

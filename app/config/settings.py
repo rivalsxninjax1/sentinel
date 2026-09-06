@@ -41,10 +41,23 @@ class ScopeConfig(BaseModel):
         return v
 
 
+class AuthContextEntry(BaseModel):
+    """Declares a named identity for cross-identity authorization testing
+    (docs/architecture.md §25/§26). `env_var` names an environment variable that
+    must hold the actual credential value at scan time — the value itself is never
+    written here, never persisted to the database, and never logged."""
+
+    label: str
+    kind: str = Field(pattern="^(header|cookie)$")
+    name: str
+    env_var: str
+
+
 class TargetConfig(BaseModel):
     name: str
     scope: ScopeConfig
     seed_urls: list[str] = Field(default_factory=list)
+    auth_contexts: list[AuthContextEntry] = Field(default_factory=list)
 
     @field_validator("seed_urls")
     @classmethod
