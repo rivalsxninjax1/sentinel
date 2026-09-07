@@ -206,3 +206,95 @@ def test_scan_test_runs_scanners_and_advances_to_testing(tmp_path: Path):
 
     status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(config_path)])
     assert "status=testing" in status_result.output
+
+
+def test_scan_verify_processes_findings_and_advances_to_correlating(tmp_path: Path):
+    """End-to-end: seed a scan directly at TESTING with one pre-existing Finding
+    (as if `scan test` had already produced it), point 'scan verify' at the same
+    unreachable target used by the scan-test smoke test above, and confirm it
+    completes and reaches CORRELATING.
+
+    The baseline fetch will fail (connection refused), so this specific finding
+    ends up "needs_manual_review" rather than verified/false_positive — that's the
+    correct, expected behavior for an unreachable baseline (see
+    test_verification_engine.py's test_baseline_fetch_failure_falls_back_to_manual_review),
+    and proves the full verify-then-correlate-then-advance pipeline works even when
+    the network layer is fully unavailable, same fail-safe pattern as scan_test."""
+    db_path = tmp_path / "sentinel_test.db"
+    config_path = tmp_path / "test_config_scan_verify.yaml"
+    config_path.write_text(
+        textwrap.dedent(
+            f"""
+            target:
+              name: "scan-verify-target"
+              scope:
+                allow:
+                  - "127.0.0.1"
+                deny: []
+              seed_urls:
+                - "http://127.0.0.1:1/"
+            scan:
+              mode: safe
+            storage_path: "{db_path}"
+            log_level: "WARNING"
+            """
+        )
+    )
+
+    from app.config.settings import SentinelConfig
+    from app.storage.repository import FindingsRepository
+    from app.tools.models import NormalizedFinding
+
+    cfg = SentinelConfig.from_yaml(str(config_path))
+
+    async def _seed() -> str:
+        db_engine = get_engine(cfg.storage_path)
+        await init_db(db_engine)
+        session_factory = make_session_factory(db_engine)
+
+        async with session_scope(session_factory) as session:
+            targets = TargetRepository(session)
+            scans = ScanRepository(session)
+            attack_surface = AttackSurfaceRepository(session)
+            findings_repo = FindingsRepository(session)
+
+            target = await targets.create(
+                cfg.target.name, {"allow": cfg.target.scope.allow, "deny": cfg.target.scope.deny}
+            )
+            scan = await scans.create(target.id, "safe", {})
+            host = await attack_surface.get_or_create_host(target.id, "127.0.0.1", scan.id)
+            endpoint = await attack_surface.get_or_create_endpoint(
+                host.id, "/search", "GET", scan.id, source="crawl"
+            )
+            test_record = await findings_repo.create_test(
+                scan_id=scan.id,
+                endpoint_id=endpoint.id,
+                vulnerability_class="xss",
+                scanner_name="reflected_xss",
+            )
+            normalized = NormalizedFinding(
+                tool_name="reflected_xss",
+                tool_version=None,
+                title="Unescaped reflection via parameter 'q'",
+                severity="medium",
+                matched_endpoint="http://127.0.0.1:1/search?q=%3Csentinel9f2a%3E",
+                raw_output="injected marker reflected unescaped in response body",
+                metadata={"parameter": "q", "vulnerability_class": "xss", "confidence": "low"},
+            )
+            await findings_repo.create_finding_from_normalized(scan.id, test_record.id, normalized)
+
+            await scans.update_status(scan.id, ScanState.TESTING.value)
+            scan_id = scan.id
+
+        await db_engine.dispose()
+        return scan_id
+
+    scan_id = asyncio.run(_seed())
+
+    result = runner.invoke(app, ["scan", "verify", scan_id, "--config", str(config_path)])
+    assert result.exit_code == 0, result.output
+    assert "Verification complete" in result.output
+    assert "1 need manual review" in result.output
+
+    status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(config_path)])
+    assert "status=correlating" in status_result.output

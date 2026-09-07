@@ -176,9 +176,14 @@ class Finding(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     vulnerability_class: Mapped[str] = mapped_column(String(64), nullable=False)
     severity: Mapped[str] = mapped_column(String(16), nullable=False)
-    # info | low | medium | high | confirmed — NEVER set to "confirmed" before the
-    # Verification Engine (Phase 9) exists. See docs/architecture.md §22.
+    # info | low | medium | high | confirmed — NEVER set to "confirmed" automatically
+    # anywhere in this codebase. See docs/architecture.md §22 and
+    # app/verification/engine.py's hard cap at "high".
     confidence: Mapped[str] = mapped_column(String(16), nullable=False, default="low")
+    # unverified | verified | false_positive | needs_manual_review — set by
+    # app/verification/engine.py (Phase 9). Defaults to "unverified" for any
+    # Finding created before `scan verify` runs.
+    verification_status: Mapped[str] = mapped_column(String(24), nullable=False, default="unverified")
     matched_endpoint: Mapped[str] = mapped_column(String(2048), nullable=False)
     description: Mapped[str] = mapped_column(String(2048), nullable=False)
     metadata_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
@@ -192,4 +197,20 @@ class Evidence(Base):
     finding_id: Mapped[str] = mapped_column(ForeignKey("findings.id"), nullable=False)
     kind: Mapped[str] = mapped_column(String(32), nullable=False)  # "raw_output" | "request" | "response"
     content: Mapped[str] = mapped_column(String(4000), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class Correlation(Base):
+    __tablename__ = "correlations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
+    endpoint_id: Mapped[str] = mapped_column(ForeignKey("endpoints.id"), nullable=False)
+    vulnerability_class: Mapped[str] = mapped_column(String(64), nullable=False)
+    finding_ids_json: Mapped[list] = mapped_column(JSON, nullable=False)
+    tool_names_json: Mapped[list] = mapped_column(JSON, nullable=False)
+    combined_confidence: Mapped[str] = mapped_column(String(16), nullable=False)
+    # "agreement" | "conflicting_evidence" | "insufficient_correlation"
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    rationale: Mapped[str] = mapped_column(String(1024), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

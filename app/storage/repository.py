@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.storage.models import (
     Classification,
+    Correlation,
     Endpoint,
     Evidence,
     Finding,
@@ -325,6 +326,71 @@ class FindingsRepository:
     async def list_findings_for_scan(self, scan_id: str) -> list[Finding]:
         result = await self._session.execute(
             select(Finding).where(Finding.scan_id == scan_id)
+        )
+        return list(result.scalars().all())
+
+    async def list_findings_with_source_for_scan(self, scan_id: str) -> list[dict]:
+        """Same findings as list_findings_for_scan, but joined with Test to include
+        endpoint_id and scanner_name (as "tool_name") — the shape
+        app.verification.correlation.CorrelationEngine expects. Returned as plain
+        dicts (not ORM rows) since the correlation engine is deliberately
+        database-agnostic."""
+        result = await self._session.execute(
+            select(Finding, Test.endpoint_id, Test.scanner_name)
+            .join(Test, Finding.test_id == Test.id)
+            .where(Finding.scan_id == scan_id)
+        )
+        return [
+            {
+                "id": finding.id,
+                "endpoint_id": endpoint_id,
+                "vulnerability_class": finding.vulnerability_class,
+                "tool_name": scanner_name,
+                "verification_status": finding.verification_status,
+                "confidence": finding.confidence,
+            }
+            for finding, endpoint_id, scanner_name in result.all()
+        ]
+
+    async def update_verification(
+        self, finding_id: str, verification_status: str, confidence: str
+    ) -> Finding | None:
+        finding = await self._session.get(Finding, finding_id)
+        if finding is None:
+            return None
+        finding.verification_status = verification_status
+        finding.confidence = confidence
+        await self._session.flush()
+        return finding
+
+    async def create_correlation(
+        self,
+        scan_id: str,
+        endpoint_id: str,
+        vulnerability_class: str,
+        finding_ids: list[str],
+        tool_names: list[str],
+        combined_confidence: str,
+        status: str,
+        rationale: str,
+    ) -> Correlation:
+        record = Correlation(
+            scan_id=scan_id,
+            endpoint_id=endpoint_id,
+            vulnerability_class=vulnerability_class,
+            finding_ids_json=finding_ids,
+            tool_names_json=tool_names,
+            combined_confidence=combined_confidence,
+            status=status,
+            rationale=rationale,
+        )
+        self._session.add(record)
+        await self._session.flush()
+        return record
+
+    async def list_correlations_for_scan(self, scan_id: str) -> list[Correlation]:
+        result = await self._session.execute(
+            select(Correlation).where(Correlation.scan_id == scan_id)
         )
         return list(result.scalars().all())
 

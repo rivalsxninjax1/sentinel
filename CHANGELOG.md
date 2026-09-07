@@ -3,6 +3,78 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.9.0] - Phase 9 - Verification & Correlation
+### Added
+- `app/scanners/util.py` — centralized `TRAVERSAL_INDICATORS` constant (previously
+  duplicated identically in `path_traversal.py` and `xxe.py`) and new
+  `strip_query_param()` helper (removes a query parameter entirely — used to build
+  a "no payload at all" baseline URL from an already payload-bearing test URL).
+  `path_traversal.py`/`xxe.py` now import the shared constant; behavior unchanged.
+- `app/verification/engine.py` — `VerificationEngine`: baseline/differential
+  analysis for `xss`/`ssti`/`sqli`/`path_traversal`/`xxe`/`ssrf` (re-fetches the
+  endpoint with the payload-bearing parameter removed, re-applies the original
+  scanner's own signature check to the baseline response — signature present in
+  baseline too means false positive, absent means verified and confidence
+  upgraded one step). Objective/factual classes (`security_headers`,
+  `information_exposure`, `cors`, `http_method_enumeration`) are marked verified
+  without a baseline request. Everything else is marked `needs_manual_review`.
+  **Hard-capped at confidence `"high"` — no code path in this engine (or anywhere
+  else in SENTINEL) sets `"confirmed"`.**
+- `app/verification/correlation.py` — `CorrelationEngine`: groups findings by
+  `(endpoint, vulnerability_class)`, requires 2+ findings from 2+ distinct
+  scanner/tool names to correlate at all (same scanner twice isn't independent
+  corroboration), produces `agreement`/`conflicting_evidence`/
+  `insufficient_correlation` groups with a `combined_confidence`. Deliberately
+  does NOT mutate individual `Finding` rows — correlation is an additive
+  read-model, not a silent overwrite of each source's own assessment.
+- `app/storage/models.py` — `Finding.verification_status` column (defaults to
+  `"unverified"`); new `Correlation` table.
+- `app/storage/repository.py` — `FindingsRepository.update_verification()`,
+  `list_findings_with_source_for_scan()` (joins `Test` to expose `endpoint_id` +
+  `scanner_name` as plain dicts for the database-agnostic `CorrelationEngine`),
+  `create_correlation()`, `list_correlations_for_scan()`.
+- CLI: `sentinel scan verify <scan_id>` — runs verification then correlation,
+  advances `TESTING` -> `VERIFYING` -> `CORRELATING`.
+- `docs/verification.md` — full architecture writeup: the three verification
+  paths, the confidence-cap rationale, the correlation table, what Phase 9
+  explicitly does NOT do (timing analysis, DOM differential analysis, re-running
+  tool adapters for verification).
+- Tests: `test_verification_engine.py` (all six baseline-checkable classes, the
+  confidence-upgrade-capped-at-high case, baseline-fetch-failure fallback,
+  missing-parameter-metadata fallback), `test_correlation_engine.py` (agreement,
+  conflict, insufficient-correlation, same-tool-twice non-corroboration,
+  different-endpoint/different-vulnerability-class non-grouping, and an explicit
+  "never produces confirmed" assertion), extended
+  `test_attack_surface_repository.py` and `test_cli_smoke.py` (full `scan verify`
+  run against an intentionally-unreachable target, proving the
+  verify-then-correlate-then-advance pipeline degrades gracefully to
+  `needs_manual_review` when the baseline fetch itself fails, the same fail-safe
+  pattern already proven for `scan test`/`scan classify`) — 21 new/updated tests
+  (252 total, all passing).
+
+### Notes
+- **The confidence cap is the single most important design decision in this
+  phase, stated plainly rather than left implicit:** SENTINEL will not
+  automatically claim a vulnerability is "confirmed," no matter how much evidence
+  accumulates through baseline checks and multi-source agreement. `"confirmed"`
+  is reserved for a human sign-off step that doesn't exist in this codebase — if
+  one is added in a later phase, it should be the only thing permitted to write
+  that value.
+- Tool-adapter (Phase 5) findings currently fall into the
+  `needs_manual_review` bucket during verification, since their
+  `vulnerability_class` values aren't in `VerificationEngine`'s baseline-check
+  table — they're marked with a status, but not differentially re-tested.
+  Extending baseline checks to tool-adapter output is reasonable future work, not
+  an oversight (it would need per-tool-adapter signature knowledge this engine
+  doesn't have yet).
+- No timing-based or DOM-based differential analysis — only response-content
+  differential analysis (docs/architecture.md §23 lists timing/DOM as additional
+  techniques; both are explicitly out of scope for this phase, see
+  docs/verification.md's closing section).
+- Same "no live target" caveat as Phases 6-8: verified against
+  `httpx.MockTransport` simulated baseline/test response pairs, not a real
+  vulnerable application.
+
 ## [0.8.0] - Phase 8 - API Security
 ### Added
 - `app/core/auth_context.py` — `AuthenticationContext`/`AuthContextConfig`:

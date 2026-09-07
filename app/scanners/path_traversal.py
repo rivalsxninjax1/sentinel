@@ -10,6 +10,7 @@ import httpx
 
 from app.core.http_client import SentinelHTTPClient
 from app.scanners.base import DeterministicScanner, ScanTarget
+from app.scanners.util import TRAVERSAL_INDICATORS as _TRAVERSAL_INDICATORS
 from app.scanners.util import inject_query_param
 from app.scope.engine import ScopeViolation
 from app.tools.models import NormalizedFinding
@@ -18,7 +19,6 @@ _TRAVERSAL_PAYLOADS = [
     "../../../../../../etc/passwd",
     "..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd",
 ]
-_TRAVERSAL_INDICATORS = ["root:x:0:0", "root:*:0:0"]
 
 
 class PathTraversalScanner(DeterministicScanner):

@@ -35,6 +35,8 @@ from app.llm.ollama_provider import OllamaProvider
 from app.scanners.registry import build_default_scanners
 from app.scope.engine import ScopeEngine, ScopeViolation
 from app.storage.db import get_engine, init_db, make_session_factory, session_scope
+from app.verification.correlation import CorrelationEngine
+from app.verification.engine import VerificationEngine
 from app.storage.repository import (
     AttackSurfaceRepository,
     FindingsRepository,
@@ -716,6 +718,125 @@ def scan_test(
             f"scan mode), {findings_created} candidate findings recorded"
             f"{f', {len(errors)} scanner errors' if errors else ''}. "
             f"Scan advanced to TESTING."
+        )
+
+    asyncio.run(_run())
+
+
+@scan_app.command("verify")
+def scan_verify(
+    scan_id: str,
+    config: str = typer.Option(..., "--config", "-c"),
+) -> None:
+    """Phase 9 — Verification & Correlation: for every Finding from `scan test`,
+    runs a baseline/differential comparison (reflection/injection classes) or marks
+    objective findings verified / candidate-only findings needs_manual_review, then
+    groups findings by (endpoint, vulnerability_class) across independent sources
+    and records agreement/conflict as Correlation rows.
+
+    NEVER sets confidence to "confirmed" — the maximum automated confidence is
+    "high" (see app/verification/engine.py's module docstring for why). Advances
+    TESTING -> VERIFYING -> CORRELATING."""
+    cfg = _load_config(config)
+    configure_logging(cfg.log_level)
+
+    scope = ScopeEngine(allow=cfg.target.scope.allow, deny=cfg.target.scope.deny)
+    rate_limiter = RateLimiter(
+        requests_per_second=cfg.limits.requests_per_second,
+        concurrency=cfg.limits.concurrency,
+        max_requests=cfg.limits.max_requests,
+    )
+
+    async def _run() -> None:
+        engine = get_engine(cfg.storage_path)
+        await init_db(engine)
+        session_factory = make_session_factory(engine)
+
+        async with session_scope(session_factory) as session:
+            scans = ScanRepository(session)
+            scan_record = await scans.get(scan_id)
+            if scan_record is None:
+                typer.echo(f"No such scan: {scan_id}", err=True)
+                raise typer.Exit(code=1)
+            if scan_record.status != ScanState.TESTING.value:
+                typer.echo(
+                    f"Scan {scan_id} must be in TESTING to verify "
+                    f"(currently: {scan_record.status}).",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+
+            lifecycle = ScanLifecycle(ScanState.TESTING)
+            lifecycle.advance()  # TESTING -> VERIFYING
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        verified_count = 0
+        false_positive_count = 0
+        manual_review_count = 0
+
+        async with SentinelHTTPClient(scope=scope, rate_limiter=rate_limiter) as http_client:
+            verification_engine = VerificationEngine(http_client)
+
+            async with session_scope(session_factory) as session:
+                findings_repo = FindingsRepository(session)
+                findings = await findings_repo.list_findings_for_scan(scan_id)
+
+                for finding in findings:
+                    outcome = await verification_engine.verify(
+                        finding.vulnerability_class,
+                        finding.matched_endpoint,
+                        finding.confidence,
+                        finding.metadata_json or {},
+                    )
+                    await findings_repo.update_verification(
+                        finding.id, outcome.verification_status, outcome.confidence
+                    )
+                    if outcome.verification_status == "verified":
+                        verified_count += 1
+                    elif outcome.verification_status == "false_positive":
+                        false_positive_count += 1
+                    else:
+                        manual_review_count += 1
+
+        correlation_groups_created = 0
+        agreement_count = 0
+        conflict_count = 0
+
+        async with session_scope(session_factory) as session:
+            findings_repo = FindingsRepository(session)
+            findings_with_source = await findings_repo.list_findings_with_source_for_scan(scan_id)
+
+            correlation_engine = CorrelationEngine()
+            groups = correlation_engine.correlate(findings_with_source)
+
+            for group in groups:
+                await findings_repo.create_correlation(
+                    scan_id=scan_id,
+                    endpoint_id=group.endpoint_id,
+                    vulnerability_class=group.vulnerability_class,
+                    finding_ids=group.finding_ids,
+                    tool_names=group.tool_names,
+                    combined_confidence=group.combined_confidence,
+                    status=group.status,
+                    rationale=group.rationale,
+                )
+                correlation_groups_created += 1
+                if group.status == "agreement":
+                    agreement_count += 1
+                elif group.status == "conflicting_evidence":
+                    conflict_count += 1
+
+            scans = ScanRepository(session)
+            lifecycle = ScanLifecycle(ScanState.VERIFYING)
+            lifecycle.advance()  # VERIFYING -> CORRELATING
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        typer.echo(
+            f"Verification complete: {verified_count} verified, "
+            f"{false_positive_count} false positives, {manual_review_count} need manual review. "
+            f"Correlation: {correlation_groups_created} groups "
+            f"({agreement_count} agreement, {conflict_count} conflicting evidence). "
+            f"Scan advanced to CORRELATING."
         )
 
     asyncio.run(_run())

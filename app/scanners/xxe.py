@@ -18,6 +18,7 @@ import httpx
 
 from app.core.http_client import SentinelHTTPClient
 from app.scanners.base import DeterministicScanner, ScanTarget
+from app.scanners.util import TRAVERSAL_INDICATORS as _TRAVERSAL_INDICATORS
 from app.scope.engine import ScopeViolation
 from app.tools.models import NormalizedFinding
 
@@ -26,7 +27,6 @@ _XXE_PAYLOAD = (
     "<!DOCTYPE data [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>\n"
     "<data>&xxe;</data>"
 )
-_TRAVERSAL_INDICATORS = ["root:x:0:0", "root:*:0:0"]
 
 
 class XXEScanner(DeterministicScanner):
