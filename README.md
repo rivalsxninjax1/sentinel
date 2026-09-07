@@ -32,6 +32,7 @@ See `docs/architecture.md` §4 for the full repository structure and rationale.
 - `docs/ollama.md` — local AI reasoning layer
 - `docs/scanners.md` — deterministic detection engine coverage and limitations
 - `docs/verification.md` — verification engine, correlation engine, confidence cap
+- `docs/reporting.md` — report pipeline, disposition mapping, CWE/CVSS approach, HTML escaping
 - `docs/testing.md` — test strategy, lab-based regression testing
 - `docs/lab.md` — local vulnerable lab setup
 - `docs/github-workflow.md` — commit/branch/checkpoint conventions

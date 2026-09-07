@@ -3,6 +3,62 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.10.0] - Phase 10 - Reporting
+### Added
+- `app/reporting/disposition.py` — `disposition()`: maps
+  `(verification_status, confidence)` onto the report-facing categories
+  docs/architecture.md §40 requires (Confirmed/Likely/Potential/Informational/
+  Requires Manual Verification). The "Confirmed" mapping exists for
+  completeness only — nothing in this codebase ever produces `confidence ==
+  "confirmed"`, matching Phase 9's hard cap. `approximate_cvss()`: a clearly-labeled
+  severity-based estimate, not a real CVSS vector calculation.
+- `app/reporting/knowledge_base.py` — static CWE ID / impact / remediation text
+  for all 18 vulnerability classes SENTINEL's scanners produce. A dedicated test
+  greps every scanner file for its `vulnerability_class` and asserts full
+  knowledge-base coverage, so a future scanner with no matching entry fails CI
+  rather than silently shipping blank guidance.
+- `app/reporting/models.py` — `ReportData`/`ReportFinding`/`CorrelationSummary`
+  dataclasses; the single shape all three renderers consume.
+- `app/reporting/builder.py` — `ReportBuilder`: assembles `ReportData` from
+  Findings/Evidence/Correlations for a scan. **Excludes `false_positive` findings
+  from the main report entirely** (moved to `excluded_false_positives`, shown only
+  in a clearly-labeled appendix) rather than downgrading them to a low disposition
+  — matching the non-negotiable rule against reporting speculative results.
+- `app/reporting/renderers/{json,markdown,html}_renderer.py` — three renderers
+  over the same `ReportData`. The HTML renderer runs every target-originated string
+  (titles, evidence, matched_endpoint, target name) through `html.escape()` before
+  writing it — a malicious target could otherwise inject markup into a report a
+  human later opens. Dedicated tests inject `<script>`/`<img onerror=...>` payloads
+  into every such field and assert none appear unescaped in the output.
+- CLI: `sentinel scan report <scan_id> --format {json,markdown,html,all}
+  --output-dir <dir>` — writes `<output-dir>/<scan_id>/report.{json,md,html}`.
+  Advances `CORRELATING` -> `REPORTING` -> `COMPLETE`, the final lifecycle stage.
+- `docs/reporting.md` — full pipeline writeup: disposition mapping table, why
+  "Confirmed" never appears, false-positive exclusion, CWE coverage guarantee,
+  approximate-CVSS caveat, HTML escaping rationale.
+- Tests: `test_disposition.py`, `test_knowledge_base.py` (including the
+  scan-every-scanner-file coverage guard), `test_report_renderers.py` (JSON
+  round-trip, Markdown structure/ordering, and — critically — HTML escaping of
+  hostile titles/evidence/endpoint/target-name), `test_report_builder.py`
+  (false-positive exclusion, disposition computation, summary counts, knowledge
+  base population, unknown-scan error handling), extended `test_cli_smoke.py`
+  (full `scan report` run writing real files to a temp directory, verifying JSON/
+  Markdown/HTML content and the scan reaching the final COMPLETE state) — 27 new
+  tests (279 total, all passing).
+
+### Notes
+- This phase closes the lifecycle loop: a scan can now go
+  `CREATED → ... → TESTING → VERIFYING → CORRELATING → REPORTING → COMPLETE` end
+  to end through the CLI alone (`scan create` → `scan crawl` → `scan discover-js`
+  → `scan classify` → `scan test` → `scan verify` → `scan report`).
+- No PDF renderer (HTML can be printed to PDF by any browser) and no cross-scan
+  trend/regression reporting — both are reasonable future work, the latter
+  explicitly slated for Phase 12 per the roadmap, not omissions from this phase's
+  scope.
+- Same "no live target" caveat as Phases 6-9: renderers and the builder are
+  verified against hand-constructed `ReportData`/database fixtures, not output
+  from a real scan against a real vulnerable application.
+
 ## [0.9.0] - Phase 9 - Verification & Correlation
 ### Added
 - `app/scanners/util.py` — centralized `TRAVERSAL_INDICATORS` constant (previously

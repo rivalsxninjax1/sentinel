@@ -298,3 +298,109 @@ def test_scan_verify_processes_findings_and_advances_to_correlating(tmp_path: Pa
 
     status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(config_path)])
     assert "status=correlating" in status_result.output
+
+
+def test_scan_report_writes_files_and_reaches_complete(tmp_path: Path):
+    """End-to-end: seed a scan directly at CORRELATING with one verified finding,
+    run `scan report`, and confirm real JSON/Markdown/HTML files land on disk with
+    the expected content, and the scan reaches the final COMPLETE state."""
+    db_path = tmp_path / "sentinel_test.db"
+    config_path = tmp_path / "test_config_scan_report.yaml"
+    config_path.write_text(
+        textwrap.dedent(
+            f"""
+            target:
+              name: "scan-report-target"
+              scope:
+                allow:
+                  - "127.0.0.1"
+                deny: []
+              seed_urls:
+                - "http://127.0.0.1:1/"
+            scan:
+              mode: safe
+            storage_path: "{db_path}"
+            log_level: "WARNING"
+            """
+        )
+    )
+
+    from app.config.settings import SentinelConfig
+    from app.storage.repository import FindingsRepository
+    from app.tools.models import NormalizedFinding
+
+    cfg = SentinelConfig.from_yaml(str(config_path))
+    output_dir = tmp_path / "reports"
+
+    async def _seed() -> str:
+        db_engine = get_engine(cfg.storage_path)
+        await init_db(db_engine)
+        session_factory = make_session_factory(db_engine)
+
+        async with session_scope(session_factory) as session:
+            targets = TargetRepository(session)
+            scans = ScanRepository(session)
+            attack_surface = AttackSurfaceRepository(session)
+            findings_repo = FindingsRepository(session)
+
+            target = await targets.create(
+                cfg.target.name, {"allow": cfg.target.scope.allow, "deny": cfg.target.scope.deny}
+            )
+            scan = await scans.create(target.id, "safe", {})
+            host = await attack_surface.get_or_create_host(target.id, "127.0.0.1", scan.id)
+            endpoint = await attack_surface.get_or_create_endpoint(
+                host.id, "/search", "GET", scan.id, source="crawl"
+            )
+            test_record = await findings_repo.create_test(
+                scan_id=scan.id,
+                endpoint_id=endpoint.id,
+                vulnerability_class="xss",
+                scanner_name="reflected_xss",
+            )
+            normalized = NormalizedFinding(
+                tool_name="reflected_xss",
+                tool_version=None,
+                title="Unescaped reflection via parameter 'q'",
+                severity="medium",
+                matched_endpoint="http://127.0.0.1:1/search?q=x",
+                raw_output="injected marker reflected unescaped in response body",
+                metadata={"parameter": "q", "vulnerability_class": "xss", "confidence": "high"},
+            )
+            f = await findings_repo.create_finding_from_normalized(scan.id, test_record.id, normalized)
+            await findings_repo.update_verification(f.id, "verified", "high")
+
+            await scans.update_status(scan.id, ScanState.CORRELATING.value)
+            scan_id = scan.id
+
+        await db_engine.dispose()
+        return scan_id
+
+    scan_id = asyncio.run(_seed())
+
+    result = runner.invoke(
+        app,
+        ["scan", "report", scan_id, "--config", str(config_path), "--output-dir", str(output_dir)],
+    )
+    assert result.exit_code == 0, result.output
+    assert "Report generated: 1 findings" in result.output
+    assert "Scan COMPLETE" in result.output
+
+    json_path = output_dir / scan_id / "report.json"
+    md_path = output_dir / scan_id / "report.md"
+    html_path = output_dir / scan_id / "report.html"
+    assert json_path.exists()
+    assert md_path.exists()
+    assert html_path.exists()
+
+    assert "Unescaped reflection" in md_path.read_text()
+    assert "Likely" in md_path.read_text()  # high confidence + verified -> Likely
+    assert "<!DOCTYPE html>" in html_path.read_text()
+
+    import json as json_module
+
+    data = json_module.loads(json_path.read_text())
+    assert data["findings"][0]["disposition"] == "Likely"
+    assert data["findings"][0]["cwe_id"] == "CWE-79"
+
+    status_result = runner.invoke(app, ["scan", "status", scan_id, "--config", str(config_path)])
+    assert "status=complete" in status_result.output

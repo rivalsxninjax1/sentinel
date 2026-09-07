@@ -19,8 +19,8 @@ and tested before the next one starts. No phase jumps ahead into later functiona
 | 7 | Advanced Detection (SSRF, SSTI, XXE, upload, CSRF, CORS, IDOR/BOLA, JWT) | ✅ |
 | 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | ✅ |
 | 9 | Verification & Correlation | ✅ |
-| 10 | Reporting | ⏳ next |
-| 11 | Dashboard | not started |
+| 10 | Reporting | ✅ |
+| 11 | Dashboard | ⏳ next |
 | 12 | Research / Advanced Intelligence | not started |
 
 ## Per-phase checklist

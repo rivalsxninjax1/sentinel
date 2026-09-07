@@ -6,15 +6,19 @@ Commands implemented so far:
   sentinel scan crawl <scan_id> --config configs/example.yaml
   sentinel scan discover-js <scan_id> --config configs/example.yaml
   sentinel scan classify <scan_id> --config configs/example.yaml
+  sentinel scan test <scan_id> --config configs/example.yaml
+  sentinel scan verify <scan_id> --config configs/example.yaml
+  sentinel scan report <scan_id> --config configs/example.yaml
   sentinel scan status <scan_id> --config configs/example.yaml
+  sentinel tools list
 
-Later phases attach real testing/verification behavior to the lifecycle stages this
-scaffolds.
+Later phases attach real dashboard/research behavior beyond this scaffolding.
 """
 
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from urllib.parse import urljoin
 
 import httpx
@@ -35,6 +39,8 @@ from app.llm.ollama_provider import OllamaProvider
 from app.scanners.registry import build_default_scanners
 from app.scope.engine import ScopeEngine, ScopeViolation
 from app.storage.db import get_engine, init_db, make_session_factory, session_scope
+from app.reporting.builder import ReportBuilder
+from app.reporting.renderers import html_renderer, json_renderer, markdown_renderer
 from app.verification.correlation import CorrelationEngine
 from app.verification.engine import VerificationEngine
 from app.storage.repository import (
@@ -837,6 +843,90 @@ def scan_verify(
             f"Correlation: {correlation_groups_created} groups "
             f"({agreement_count} agreement, {conflict_count} conflicting evidence). "
             f"Scan advanced to CORRELATING."
+        )
+
+    asyncio.run(_run())
+
+
+@scan_app.command("report")
+def scan_report(
+    scan_id: str,
+    config: str = typer.Option(..., "--config", "-c"),
+    output_format: str = typer.Option(
+        "all", "--format", help="One of: json, markdown, html, all"
+    ),
+    output_dir: str = typer.Option("reports", help="Directory to write report file(s) into"),
+) -> None:
+    """Phase 10 — Reporting: assembles every Finding into a report, distinguishing
+    Confirmed/Likely/Potential/Informational/Requires Manual Verification (never
+    "Confirmed" in practice — see app/reporting/disposition.py), excludes false
+    positives from the main report (listed separately for audit-trail
+    transparency), and writes JSON/Markdown/HTML output.
+
+    Scan must be in CORRELATING. Advances CORRELATING -> REPORTING -> COMPLETE —
+    this is the final lifecycle stage."""
+    cfg = _load_config(config)
+    configure_logging(cfg.log_level)
+
+    if output_format not in ("json", "markdown", "html", "all"):
+        typer.echo(f"Invalid --format {output_format!r}; must be json, markdown, html, or all", err=True)
+        raise typer.Exit(code=1)
+
+    async def _run() -> None:
+        engine = get_engine(cfg.storage_path)
+        await init_db(engine)
+        session_factory = make_session_factory(engine)
+
+        async with session_scope(session_factory) as session:
+            scans = ScanRepository(session)
+            scan_record = await scans.get(scan_id)
+            if scan_record is None:
+                typer.echo(f"No such scan: {scan_id}", err=True)
+                raise typer.Exit(code=1)
+            if scan_record.status != ScanState.CORRELATING.value:
+                typer.echo(
+                    f"Scan {scan_id} must be in CORRELATING to report "
+                    f"(currently: {scan_record.status}).",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+
+            lifecycle = ScanLifecycle(ScanState.CORRELATING)
+            lifecycle.advance()  # CORRELATING -> REPORTING
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        async with session_scope(session_factory) as session:
+            builder = ReportBuilder(
+                ScanRepository(session), TargetRepository(session), FindingsRepository(session)
+            )
+            report = await builder.build(scan_id)
+
+            scan_dir = Path(output_dir) / scan_id
+            scan_dir.mkdir(parents=True, exist_ok=True)
+
+            written_files = []
+            if output_format in ("json", "all"):
+                path = scan_dir / "report.json"
+                path.write_text(json_renderer.render(report))
+                written_files.append(str(path))
+            if output_format in ("markdown", "all"):
+                path = scan_dir / "report.md"
+                path.write_text(markdown_renderer.render(report))
+                written_files.append(str(path))
+            if output_format in ("html", "all"):
+                path = scan_dir / "report.html"
+                path.write_text(html_renderer.render(report))
+                written_files.append(str(path))
+
+            scans = ScanRepository(session)
+            lifecycle = ScanLifecycle(ScanState.REPORTING)
+            lifecycle.advance()  # REPORTING -> COMPLETE
+            await scans.update_status(scan_id, lifecycle.state.value)
+
+        typer.echo(
+            f"Report generated: {len(report.findings)} findings "
+            f"({len(report.excluded_false_positives)} false positives excluded). "
+            f"Wrote: {', '.join(written_files)}. Scan COMPLETE."
         )
 
     asyncio.run(_run())
