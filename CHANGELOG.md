@@ -3,6 +3,54 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+## [0.11.0] - Phase 11 - Dashboard
+### Added
+- `app/dashboard/app.py` — `create_dashboard_app()`: a FastAPI app with five
+  read-only routes (scan list, scan overview, findings, attack surface,
+  classifications). No route creates, modifies, or deletes anything — every
+  mutation still happens exclusively through `scan ...` CLI commands.
+  FastAPI/uvicorn/jinja2 are optional dependencies (`pip install -e
+  ".[dashboard]"`), same graceful-unavailable pattern as Playwright (Phase 3) and
+  `websockets` (Phase 8): `DashboardUnavailable` is raised with a clear
+  pip-install hint rather than a bare `ImportError`.
+- `app/dashboard/templates.py` — Jinja2 templates with `autoescape=True` for
+  every page except `/findings`, which directly reuses Phase 10's
+  `html_renderer.render()` output instead of re-implementing findings display
+  with a second escaping mechanism.
+- `app/storage/repository.py` — `ScanRepository.list_all_with_target()`,
+  `IntelligenceRepository.list_for_scan_with_context()` (joins Classification with
+  Endpoint/Parameter for human-readable display).
+- CLI: `sentinel dashboard --config ... [--host 127.0.0.1] [--port 8000]` — binds
+  to localhost by default, prints an explicit stderr warning (not a refusal) if
+  `--host` is set to anything else, since this server has no authentication.
+- `docs/dashboard.md` — routes table, security posture (no auth — read this before
+  running anywhere but your own machine), the double-escaping bug found and fixed
+  during this phase, and explicit scope limitations.
+- Tests: `tests/test_dashboard.py` — all five routes, 404 handling for unknown
+  scans, empty-state handling (no scans / no classifications), and a dedicated
+  hostile-endpoint-path test that caught a real double-escaping bug during
+  development — 9 new tests (288 total, all passing). Also manually verified with
+  a real running `uvicorn` server (not just the test client) hit via `curl`.
+
+### Notes
+- **Real bug found and fixed during this phase, not simulated:** the outer page
+  layout initially re-escaped each page's already-escaped sub-template output,
+  corrupting `&lt;` into `&amp;lt;` instead of displaying it correctly. The
+  hostile-endpoint-path test failed on the very first run with output that
+  contained neither the raw payload nor the expected escaped form — exactly the
+  double-escaping signature. Fixed by wrapping pre-rendered body content in
+  `markupsafe.Markup()` before handing it to the outer layout template. Kept as a
+  permanent regression test, not just a one-off fix.
+- No authentication on the dashboard server — a deliberate, clearly-documented
+  scope boundary for this phase, not an oversight. See docs/dashboard.md before
+  considering any deployment beyond localhost.
+- No live/streaming updates — every page queries the database fresh per request;
+  refresh to see new data from an in-progress or newly-completed scan stage.
+- Verified this phase against a real running server via `curl`, in addition to the
+  usual `httpx.ASGITransport`-based test suite — the one phase so far where "no
+  live target available in my sandbox" doesn't apply, since the dashboard serves
+  SENTINEL's own database, not a scanned target.
+
 ## [0.10.0] - Phase 10 - Reporting
 ### Added
 - `app/reporting/disposition.py` — `disposition()`: maps

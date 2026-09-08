@@ -983,5 +983,45 @@ def tools_list() -> None:
     asyncio.run(_run())
 
 
+@app.command("dashboard")
+def dashboard(
+    config: str = typer.Option(..., "--config", "-c"),
+    host: str = typer.Option(
+        "127.0.0.1", help="Bind address. Do NOT use 0.0.0.0 — this server has no authentication."
+    ),
+    port: int = typer.Option(8000, help="Port to listen on."),
+) -> None:
+    """Phase 11 — Dashboard: launches a local, read-only web UI over the scan
+    database (scan status, attack surface, findings, AI reasoning). Every mutation
+    still happens exclusively through `scan ...` CLI commands — this only ever
+    reads.
+
+    SECURITY: no authentication. Binds to 127.0.0.1 by default; do not change this
+    to 0.0.0.0 or otherwise expose it beyond localhost without adding
+    authentication first (see docs/dashboard.md)."""
+    cfg = _load_config(config)
+    configure_logging(cfg.log_level)
+
+    from app.dashboard.app import DashboardUnavailable, create_dashboard_app
+
+    try:
+        dashboard_app = create_dashboard_app(cfg.storage_path)
+    except DashboardUnavailable as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1)
+
+    if host not in ("127.0.0.1", "localhost"):
+        typer.echo(
+            f"[!] Binding to {host!r} — this dashboard has NO AUTHENTICATION. "
+            "Only do this if you understand the exposure.",
+            err=True,
+        )
+
+    import uvicorn
+
+    typer.echo(f"SENTINEL dashboard running at http://{host}:{port}")
+    uvicorn.run(dashboard_app, host=host, port=port, log_level="warning")
+
+
 if __name__ == "__main__":
     app()

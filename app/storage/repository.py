@@ -75,6 +75,15 @@ class ScanRepository:
         await self._session.flush()
         return scan
 
+    async def list_all_with_target(self) -> list[tuple[Scan, Target]]:
+        """Returns every scan joined with its target, most recent first — the shape
+        the dashboard's home page (app/dashboard/routes.py) needs and nothing else
+        currently does, hence not just `list[Scan]`."""
+        result = await self._session.execute(
+            select(Scan, Target).join(Target, Scan.target_id == Target.id).order_by(Scan.started_at.desc())
+        )
+        return list(result.all())
+
 
 class AttackSurfaceRepository:
     """Persists crawler/discovery output. Dedup logic here is intentionally simple
@@ -263,6 +272,33 @@ class IntelligenceRepository:
             select(Classification).where(Classification.scan_id == scan_id)
         )
         return list(result.scalars().all())
+
+    async def list_for_scan_with_context(self, scan_id: str) -> list[dict]:
+        """Same rows as list_for_scan, but joined with Endpoint (and Parameter,
+        when present) to include human-readable path/method/parameter-name —
+        Classification rows alone only carry endpoint_id/parameter_id, not
+        anything a dashboard page could display directly."""
+        result = await self._session.execute(
+            select(Classification, Endpoint, Parameter)
+            .join(Endpoint, Classification.endpoint_id == Endpoint.id)
+            .outerjoin(Parameter, Classification.parameter_id == Parameter.id)
+            .where(Classification.scan_id == scan_id)
+            .order_by(Classification.risk_score.desc())
+        )
+        return [
+            {
+                "id": c.id,
+                "endpoint_path": endpoint.path,
+                "endpoint_method": endpoint.method,
+                "parameter_name": parameter.name if parameter else None,
+                "classification": c.classification,
+                "risk_score": c.risk_score,
+                "recommended_tests": c.recommended_tests_json,
+                "reason": c.reason,
+                "source": c.source,
+            }
+            for c, endpoint, parameter in result.all()
+        ]
 
 
 class FindingsRepository:

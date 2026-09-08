@@ -20,8 +20,8 @@ and tested before the next one starts. No phase jumps ahead into later functiona
 | 8 | API Security (REST, GraphQL, WebSockets, authZ matrix) | ✅ |
 | 9 | Verification & Correlation | ✅ |
 | 10 | Reporting | ✅ |
-| 11 | Dashboard | ⏳ next |
-| 12 | Research / Advanced Intelligence | not started |
+| 11 | Dashboard | ✅ |
+| 12 | Research / Advanced Intelligence | ⏳ next |
 
 ## Per-phase checklist
 

@@ -1,6 +1,6 @@
 [project]
 name = "sentinel"
-version = "0.10.0"
+version = "0.11.0"
 description = "AI-assisted context-aware web application security testing and vulnerability verification platform (authorized use only)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -35,6 +35,11 @@ browser = [
 ]
 websocket = [
     "websockets>=12.0",
+]
+dashboard = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "jinja2>=3.1",
 ]
 
 [build-system]
