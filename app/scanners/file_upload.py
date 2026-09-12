@@ -105,7 +105,7 @@ class FileUploadScanner(DeterministicScanner):
                     title="Upload with double extension (.jpg.php) accepted and referenced by path",
                     severity="medium",
                     matched_endpoint=fetch_url,
-                    raw_output=f"upload accepted, could not fetch back to confirm content-type handling",
+                    raw_output="upload accepted, could not fetch back to confirm content-type handling",
                     metadata={"vulnerability_class": self.vulnerability_class, "confidence": "low"},
                 )
             ]

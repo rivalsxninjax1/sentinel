@@ -1,0 +1,120 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'>
+<title>SENTINEL Report - my-test-target</title>
+<style>
+body{font-family:-apple-system,Helvetica,Arial,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1f2937;}h1{font-size:1.5rem;} h2{margin-top:2rem;border-bottom:1px solid #e5e7eb;padding-bottom:.25rem;}.finding{border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin:1rem 0;}.badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;color:white;font-size:.8rem;margin-right:.5rem;}table{border-collapse:collapse;} td,th{padding:.25rem .75rem;text-align:left;border-bottom:1px solid #e5e7eb;}pre{background:#f9fafb;padding:.75rem;border-radius:6px;overflow-x:auto;}
+</style></head><body>
+<h1>SENTINEL Security Report — my-test-target</h1>
+<p><strong>Scan ID:</strong> dfb6e3c4-fd48-4058-a5b2-7c67a648ff2c<br><strong>Scan mode:</strong> active<br><strong>Generated:</strong> 2026-09-09T01:32:19.860861+00:00</p>
+<h2>Summary</h2><table>
+<tr><td><span class='badge' style='background:#b91c1c'>Likely</span></td><td>5</td></tr>
+<tr><td><span class='badge' style='background:#6b7280'>Requires Manual Verification</span></td><td>1</td></tr>
+</table>
+<h2>Likely (5)</h2>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: Content-Security-Policy</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: X-Frame-Options</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>low</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>3.1</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: X-Content-Type-Options</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>low</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>3.1</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: Referrer-Policy</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>info</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>&#x27;server&#x27; header discloses: Netlify</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>info</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+</table>
+<p><strong>Description:</strong> server: Netlify</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>server: Netlify</pre>
+</div>
+<h2>Requires Manual Verification (1)</h2>
+<div class='finding'>
+<span class='badge' style='background:#6b7280'>Requires Manual Verification</span>
+<strong>POST form has no anti-CSRF token field</strong>
+<table>
+<tr><td>Vulnerability class</td><td>csrf</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>needs_manual_review</td></tr>
+<tr><td>Endpoint</td><td><code>https://sabin-sharma.com.np/submit</code></td></tr>
+<tr><td>CWE</td><td>CWE-352 — Cross-Site Request Forgery (CSRF)</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> form fields: [&#x27;access_key&#x27;, &#x27;subject&#x27;, &#x27;from_name&#x27;, &#x27;name&#x27;, &#x27;email&#x27;, &#x27;subject&#x27;, &#x27;message&#x27;]</p>
+<p><strong>Impact:</strong> Allows tricking an authenticated victim&#x27;s browser into submitting a state-changing request without their knowledge or consent.</p>
+<p><strong>Remediation:</strong> Use anti-CSRF tokens tied to the user&#x27;s session for every state-changing form, and set cookies with SameSite=Lax or Strict.</p>
+<p><strong>Evidence:</strong></p>
+<pre>form fields: [&#x27;access_key&#x27;, &#x27;subject&#x27;, &#x27;from_name&#x27;, &#x27;name&#x27;, &#x27;email&#x27;, &#x27;subject&#x27;, &#x27;message&#x27;]</pre>
+</div>
+</body></html>

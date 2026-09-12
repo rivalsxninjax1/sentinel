@@ -38,7 +38,7 @@ class SentinelHTTPClient:
             timeout=timeout, follow_redirects=follow_redirects, transport=transport
         )
 
-    async def __aenter__(self) -> "SentinelHTTPClient":
+    async def __aenter__(self) -> SentinelHTTPClient:
         return self
 
     async def __aexit__(

@@ -1,0 +1,174 @@
+{
+  "scan_id": "dfb6e3c4-fd48-4058-a5b2-7c67a648ff2c",
+  "target_name": "my-test-target",
+  "scan_mode": "active",
+  "generated_at": "2026-09-09T01:32:19.860861+00:00",
+  "findings": [
+    {
+      "id": "3a946b65-c8cd-4735-b83f-e742840557c0",
+      "title": "Missing security header: Content-Security-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "medium",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Content-Security-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-09T01:32:18.134265",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "fdeda904-5bd8-402a-aca0-f050ce40c421",
+      "title": "Missing security header: X-Frame-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Frame-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-09T01:32:18.136829",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "baf44667-ea0b-44cd-bd9a-b7e7be7cf31b",
+      "title": "Missing security header: X-Content-Type-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Content-Type-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-09T01:32:18.138250",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "c2db1710-6563-4076-aaeb-f5f9c346a831",
+      "title": "Missing security header: Referrer-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Referrer-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-09T01:32:18.139534",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "b3aeb323-dc31-4d72-a358-76f7414f5b28",
+      "title": "'server' header discloses: Netlify",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "server: Netlify",
+      "metadata": {
+        "header": "server",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "server: Netlify"
+      ],
+      "created_at": "2026-09-09T01:32:18.140768",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "316abd64-f9d3-496f-b777-7f35f21613a7",
+      "title": "POST form has no anti-CSRF token field",
+      "vulnerability_class": "csrf",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "needs_manual_review",
+      "disposition": "Requires Manual Verification",
+      "matched_endpoint": "https://sabin-sharma.com.np/submit",
+      "description": "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']",
+      "metadata": {
+        "vulnerability_class": "csrf",
+        "confidence": "low",
+        "note": "absence of a token field name is suggestive, not proof (token could be delivered via header or double-submit cookie instead)"
+      },
+      "evidence": [
+        "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']"
+      ],
+      "created_at": "2026-09-09T01:32:18.141588",
+      "cwe_id": "CWE-352",
+      "cwe_name": "Cross-Site Request Forgery (CSRF)",
+      "impact": "Allows tricking an authenticated victim's browser into submitting a state-changing request without their knowledge or consent.",
+      "remediation": "Use anti-CSRF tokens tied to the user's session for every state-changing form, and set cookies with SameSite=Lax or Strict.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    }
+  ],
+  "excluded_false_positives": [],
+  "summary_by_disposition": {
+    "Likely": 5,
+    "Requires Manual Verification": 1
+  },
+  "summary_by_severity": {
+    "medium": 2,
+    "low": 2,
+    "info": 2
+  }
+}

@@ -50,12 +50,12 @@ class _BodySignature:
 
 
 _HEADER_SIGNATURES: list[_HeaderSignature] = [
-    _HeaderSignature("Nginx", "server", re.compile(r"nginx(?:/([\d.]+))?", re.I), "high", 1),
-    _HeaderSignature("Apache", "server", re.compile(r"apache(?:/([\d.]+))?", re.I), "high", 1),
-    _HeaderSignature("Microsoft-IIS", "server", re.compile(r"microsoft-iis(?:/([\d.]+))?", re.I), "high", 1),
-    _HeaderSignature("PHP", "x-powered-by", re.compile(r"php(?:/([\d.]+))?", re.I), "high", 1),
-    _HeaderSignature("Express", "x-powered-by", re.compile(r"express", re.I), "medium"),
-    _HeaderSignature("ASP.NET", "x-powered-by", re.compile(r"asp\.net", re.I), "high"),
+    _HeaderSignature("Nginx", "server", re.compile(r"nginx(?:/([\d.]+))?", re.IGNORECASE), "high", 1),
+    _HeaderSignature("Apache", "server", re.compile(r"apache(?:/([\d.]+))?", re.IGNORECASE), "high", 1),
+    _HeaderSignature("Microsoft-IIS", "server", re.compile(r"microsoft-iis(?:/([\d.]+))?", re.IGNORECASE), "high", 1),
+    _HeaderSignature("PHP", "x-powered-by", re.compile(r"php(?:/([\d.]+))?", re.IGNORECASE), "high", 1),
+    _HeaderSignature("Express", "x-powered-by", re.compile(r"express", re.IGNORECASE), "medium"),
+    _HeaderSignature("ASP.NET", "x-powered-by", re.compile(r"asp\.net", re.IGNORECASE), "high"),
     _HeaderSignature("ASP.NET", "x-aspnet-version", re.compile(r"([\d.]+)"), "high", 1),
 ]
 
@@ -69,12 +69,12 @@ _COOKIE_SIGNATURES: list[_CookieSignature] = [
 ]
 
 _BODY_SIGNATURES: list[_BodySignature] = [
-    _BodySignature("WordPress", re.compile(r"wp-content|wp-includes", re.I), "high"),
-    _BodySignature("Drupal", re.compile(r"drupal\.settings|/sites/default/files", re.I), "medium"),
-    _BodySignature("React", re.compile(r"data-reactroot|__NEXT_DATA__", re.I), "low"),
+    _BodySignature("WordPress", re.compile(r"wp-content|wp-includes", re.IGNORECASE), "high"),
+    _BodySignature("Drupal", re.compile(r"drupal\.settings|/sites/default/files", re.IGNORECASE), "medium"),
+    _BodySignature("React", re.compile(r"data-reactroot|__NEXT_DATA__", re.IGNORECASE), "low"),
     _BodySignature(
         "Generator-meta",
-        re.compile(r'<meta[^>]+name=["\']generator["\'][^>]+content=["\']([^"\']+)["\']', re.I),
+        re.compile(r'<meta[^>]+name=["\']generator["\'][^>]+content=["\']([^"\']+)["\']', re.IGNORECASE),
         "medium",
         1,
     ),

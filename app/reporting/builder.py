@@ -12,7 +12,7 @@ transparency, never mixed into the primary findings list.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.reporting.disposition import approximate_cvss, disposition
 from app.reporting.knowledge_base import get_knowledge
@@ -98,7 +98,7 @@ class ReportBuilder:
             scan_id=scan_id,
             target_name=target.name if target else "unknown",
             scan_mode=scan.mode,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
             findings=included,
             excluded_false_positives=excluded,
             summary_by_disposition=summary_by_disposition,

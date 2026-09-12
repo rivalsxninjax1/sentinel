@@ -35,6 +35,20 @@ font-size:.75rem;}
 .status-default{background:#6b7280;}
 code{background:#f3f4f6;padding:.1rem .3rem;border-radius:3px;font-size:.85rem;}
 .muted{color:#6b7280;font-size:.85rem;}
+.quickscan{background:white;border:1px solid #e5e7eb;border-radius:8px;
+padding:1rem 1.25rem;margin-bottom:1.5rem;}
+.quickscan h2{margin-top:0;border-bottom:none;}
+.quickscan label{display:block;margin:.6rem 0 .2rem;font-weight:600;font-size:.9rem;}
+.quickscan input[type=text]{width:100%;padding:.5rem;box-sizing:border-box;
+border:1px solid #d1d5db;border-radius:4px;font-size:.95rem;}
+.quickscan select{padding:.4rem;border:1px solid #d1d5db;border-radius:4px;}
+.quickscan .auth-row{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;
+font-size:.85rem;}
+.quickscan .auth-row input{width:auto;}
+.quickscan button{margin-top:1rem;background:#2563eb;color:white;border:none;
+padding:.6rem 1.2rem;border-radius:4px;font-size:.95rem;cursor:pointer;}
+.quickscan button:hover{background:#1d4ed8;}
+.quickscan .mode-hint{font-size:.8rem;color:#6b7280;margin-top:.25rem;}
 """
 
 _LAYOUT = _env.from_string(
@@ -51,18 +65,49 @@ _LAYOUT = _env.from_string(
 
 def render_page(title: str, body: str, scan_id: str | None = None) -> str:
     """`body` is always the output of one of this module's own `_env.from_string(...)`
-    sub-templates below, each of which already auto-escapes every variable it
+    sub-templates, each of which already auto-escapes every variable it
     interpolates. Wrapping it in `Markup()` here tells the outer layout template
     not to re-escape it — without this, entities like `&lt;` produced by the inner
     template's escaping would themselves get escaped again into `&amp;lt;`,
-    corrupting (not un-escaping) the output. This is safe specifically because
-    every caller of `render_page()` in this module passes only its own
+    corrupting (not un-escaping) the output. Safe specifically because every
+    caller of `render_page()` in this module passes only its own
     already-autoescaped template output, never raw target-controlled data."""
     return _LAYOUT.render(title=title, style=_STYLE, body=Markup(body), scan_id=scan_id)
 
 
+_QUICKSCAN_FORM = _env.from_string(
+    """
+<div class="quickscan">
+<h2>Start a new scan</h2>
+<form method="post" action="/scans/quick-start">
+<label for="target_input">Target URL or IP</label>
+<input type="text" id="target_input" name="target_input"
+placeholder="https://example.com, example.com, or 10.0.0.5" required>
+
+<label for="mode">Mode</label>
+<select id="mode" name="mode">
+<option value="passive">passive — headers only, zero intrusive requests</option>
+<option value="safe" selected>safe — recommended default</option>
+<option value="active">active — intrusive, only for targets you can actively test</option>
+</select>
+<div class="mode-hint">Start with passive/safe. Only use active mode against
+targets you're explicitly authorized to actively test.</div>
+
+<div class="auth-row">
+<input type="checkbox" id="authorized" name="authorized" value="yes" required>
+<label for="authorized" style="margin:0;font-weight:normal;">
+I confirm I am authorized to test this target.</label>
+</div>
+
+<button type="submit">Start Scan</button>
+</form>
+</div>
+"""
+)
+
 _HOME_BODY = _env.from_string(
     """
+{{ quickscan_form }}
 <table>
 <tr><th>Target</th><th>Mode</th><th>Status</th><th>Started</th><th></th></tr>
 {% for row in scans %}
@@ -75,14 +120,26 @@ _HOME_BODY = _env.from_string(
 </tr>
 {% endfor %}
 </table>
-{% if not scans %}<p class="muted">No scans yet. Run <code>sentinel scan create</code> to start one.</p>{% endif %}
+{% if not scans %}<p class="muted">No scans yet — use the form above, or run
+<code>sentinel scan create</code> from the CLI.</p>{% endif %}
 """
 )
 
 
 def render_home(scans: list[dict]) -> str:
-    body = _HOME_BODY.render(scans=scans)
+    quickscan_form = _QUICKSCAN_FORM.render()
+    body = _HOME_BODY.render(scans=scans, quickscan_form=Markup(quickscan_form))
     return render_page("Scans", body)
+
+
+_ERROR_BODY = _env.from_string(
+    """<p>{{ message }}</p><p><a href="/">&laquo; Back to scans</a></p>"""
+)
+
+
+def render_error(title: str, message: str) -> str:
+    body = _ERROR_BODY.render(message=message)
+    return render_page(title, body)
 
 
 _SCAN_OVERVIEW_BODY = _env.from_string(
@@ -123,32 +180,15 @@ _SCAN_OVERVIEW_BODY = _env.from_string(
 
 
 def render_scan_overview(
-    scan_id: str,
-    target_name: str,
-    mode: str,
-    status: str,
-    status_class: str,
-    stopped_reason: str | None,
-    started_at: str,
-    counts: dict,
-    disposition_counts: dict,
-    classification_count: int,
-    ai_count: int,
-    fallback_count: int,
+    scan_id: str, target_name: str, mode: str, status: str, status_class: str,
+    stopped_reason: str | None, started_at: str, counts: dict, disposition_counts: dict,
+    classification_count: int, ai_count: int, fallback_count: int,
 ) -> str:
     body = _SCAN_OVERVIEW_BODY.render(
-        scan_id=scan_id,
-        target_name=target_name,
-        mode=mode,
-        status=status,
-        status_class=status_class,
-        stopped_reason=stopped_reason,
-        started_at=started_at,
-        counts=counts,
-        disposition_counts=disposition_counts,
-        classification_count=classification_count,
-        ai_count=ai_count,
-        fallback_count=fallback_count,
+        scan_id=scan_id, target_name=target_name, mode=mode, status=status,
+        status_class=status_class, stopped_reason=stopped_reason, started_at=started_at,
+        counts=counts, disposition_counts=disposition_counts,
+        classification_count=classification_count, ai_count=ai_count, fallback_count=fallback_count,
     )
     return render_page(f"Scan {scan_id[:8]}", body, scan_id=scan_id)
 

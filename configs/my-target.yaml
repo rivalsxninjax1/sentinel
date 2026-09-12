@@ -1,0 +1,26 @@
+target:
+  name: "my-test-target"
+  scope:
+    allow:
+      - "https://www.hamrobiratnagar.com" # <-- your actual authorized target
+    deny: []
+  seed_urls:
+    - "https://www.hamrobiratnagar.com/" # <-- where the crawler starts
+
+scan:
+  mode: active # start with passive, escalate deliberately — see below
+
+limits:
+  requests_per_second: 5
+  concurrency: 3
+  max_requests: 10000
+  max_crawl_depth: 3
+
+llm:
+  provider: ollama
+  model: "llama3" # only matters if you're running Ollama
+  base_url: "http://localhost:11434"
+  temperature: 0
+
+storage_path: "my-target.db" # separate DB file per target, recommended
+log_level: "INFO"

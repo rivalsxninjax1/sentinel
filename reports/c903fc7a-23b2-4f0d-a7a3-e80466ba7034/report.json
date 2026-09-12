@@ -1,0 +1,339 @@
+{
+  "scan_id": "c903fc7a-23b2-4f0d-a7a3-e80466ba7034",
+  "target_name": "my-test-target",
+  "scan_mode": "active",
+  "generated_at": "2026-09-09T01:58:50.552476+00:00",
+  "findings": [
+    {
+      "id": "2482a0c0-935d-45cb-903b-2bd874b233ea",
+      "title": "Missing security header: Content-Security-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "medium",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Content-Security-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-09T01:58:45.391055",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "4b262287-8c8f-470d-81d6-c932c92e0897",
+      "title": "'server' header discloses: cloudflare",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/",
+      "description": "server: cloudflare",
+      "metadata": {
+        "header": "server",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "server: cloudflare"
+      ],
+      "created_at": "2026-09-09T01:58:45.395086",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "d043955e-e932-4e14-95be-29fc9b96f61d",
+      "title": "POST form has no anti-CSRF token field",
+      "vulnerability_class": "csrf",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "needs_manual_review",
+      "disposition": "Requires Manual Verification",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact",
+      "description": "form fields: ['ad_inquiry_nonce', '_wp_http_referer', 'name', 'company', 'email', 'phone', 'message', 'captcha_input']",
+      "metadata": {
+        "vulnerability_class": "csrf",
+        "confidence": "low",
+        "note": "absence of a token field name is suggestive, not proof (token could be delivered via header or double-submit cookie instead)"
+      },
+      "evidence": [
+        "form fields: ['ad_inquiry_nonce', '_wp_http_referer', 'name', 'company', 'email', 'phone', 'message', 'captcha_input']"
+      ],
+      "created_at": "2026-09-09T01:58:45.406405",
+      "cwe_id": "CWE-352",
+      "cwe_name": "Cross-Site Request Forgery (CSRF)",
+      "impact": "Allows tricking an authenticated victim's browser into submitting a state-changing request without their knowledge or consent.",
+      "remediation": "Use anti-CSRF tokens tied to the user's session for every state-changing form, and set cookies with SameSite=Lax or Strict.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    }
+  ],
+  "excluded_false_positives": [
+    {
+      "id": "07341dfa-7d08-487c-923d-132dfb6ebd0a",
+      "title": "Possible SSTI via parameter 's' (expression evaluated, likely ERB/JSP scriptlet)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/?s=%3C%25%3D+7%2A7+%25%3E",
+      "description": "payload '<%= 7*7 %>' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "s",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "ERB/JSP scriptlet"
+      },
+      "evidence": [
+        "payload '<%= 7*7 %>' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.396430",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "dcaafe89-54d0-4688-8852-eaa20a487e47",
+      "title": "Possible SSTI via parameter 'ad_inquiry_nonce' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?ad_inquiry_nonce=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "ad_inquiry_nonce",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.397798",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "1680a94a-cf9e-42e6-aaa9-5534a809d538",
+      "title": "Possible SSTI via parameter '_wp_http_referer' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?_wp_http_referer=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "_wp_http_referer",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.398947",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "fecea8c3-de4a-4d91-a659-bf205bbd8ae9",
+      "title": "Possible SSTI via parameter 'name' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?name=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "name",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.400184",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "3f1b6844-fe06-4de6-a44f-603ccf296fab",
+      "title": "Possible SSTI via parameter 'company' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?company=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "company",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.401188",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "1accf35d-5c82-4e7d-a862-8664760ac20a",
+      "title": "Possible SSTI via parameter 'email' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?email=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "email",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.402412",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "d4529874-fc64-42cb-8e12-f23bd0725a7f",
+      "title": "Possible SSTI via parameter 'phone' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?phone=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "phone",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.403416",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "2e97b1b6-0b3b-4ff7-b3f9-2f712980d37d",
+      "title": "Possible SSTI via parameter 'message' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?message=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "message",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.404453",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    },
+    {
+      "id": "29aa8549-e2b8-4b97-9ba5-73fe3a28ee9e",
+      "title": "Possible SSTI via parameter 'captcha_input' (expression evaluated, likely Jinja2/Twig/Nunjucks)",
+      "vulnerability_class": "ssti",
+      "severity": "high",
+      "confidence": "low",
+      "verification_status": "false_positive",
+      "disposition": "Potential",
+      "matched_endpoint": "https://www.hamrobiratnagar.com/contact?captcha_input=%7B%7B7%2A7%7D%7D",
+      "description": "payload '{{7*7}}' evaluated to '49' in response",
+      "metadata": {
+        "parameter": "captcha_input",
+        "vulnerability_class": "ssti",
+        "confidence": "low",
+        "likely_engine_family": "Jinja2/Twig/Nunjucks"
+      },
+      "evidence": [
+        "payload '{{7*7}}' evaluated to '49' in response"
+      ],
+      "created_at": "2026-09-09T01:58:45.405469",
+      "cwe_id": "CWE-1336",
+      "cwe_name": "Improper Neutralization of Special Elements Used in a Template Engine",
+      "impact": "Successful exploitation frequently leads to full remote code execution on the server, not just template evaluation.",
+      "remediation": "Never render user input as a template string; use the template engine's sandboxed/logic-less mode if user content must appear in output, or escape it as plain data instead.",
+      "approximate_cvss": 7.5,
+      "correlation": null
+    }
+  ],
+  "summary_by_disposition": {
+    "Likely": 2,
+    "Requires Manual Verification": 1
+  },
+  "summary_by_severity": {
+    "medium": 2,
+    "info": 1
+  }
+}

@@ -15,11 +15,11 @@ import re
 from dataclasses import dataclass, field
 
 _FETCH_CALL = re.compile(r'fetch\(\s*[`"\']([^`"\']+)[`"\']')
-_AXIOS_CALL = re.compile(r'axios\.(?:get|post|put|delete|patch)\(\s*[`"\']([^`"\']+)[`"\']', re.I)
+_AXIOS_CALL = re.compile(r'axios\.(?:get|post|put|delete|patch)\(\s*[`"\']([^`"\']+)[`"\']', re.IGNORECASE)
 _XHR_OPEN = re.compile(
-    r'\.open\(\s*[`"\'](?:GET|POST|PUT|DELETE|PATCH)[`"\']\s*,\s*[`"\']([^`"\']+)[`"\']', re.I
+    r'\.open\(\s*[`"\'](?:GET|POST|PUT|DELETE|PATCH)[`"\']\s*,\s*[`"\']([^`"\']+)[`"\']', re.IGNORECASE
 )
-_GENERIC_API_LITERAL = re.compile(r'[`"\'](/(?:api|graphql|v[0-9]+)[^\s`"\']*)[`"\']', re.I)
+_GENERIC_API_LITERAL = re.compile(r'[`"\'](/(?:api|graphql|v[0-9]+)[^\s`"\']*)[`"\']', re.IGNORECASE)
 _WEBSOCKET_LITERAL = re.compile(r'(wss?://[^\s`"\']+)')
 _SOURCE_MAP_COMMENT = re.compile(r'//[#@]\s*sourceMappingURL=([^\s]+)')
 

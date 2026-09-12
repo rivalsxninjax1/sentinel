@@ -10,14 +10,14 @@ empty tables years before anything writes to them.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, DateTime, ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _uuid() -> str:
@@ -36,7 +36,7 @@ class Target(Base):
     scope_definition_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    scans: Mapped[list["Scan"]] = relationship(back_populates="target")
+    scans: Mapped[list[Scan]] = relationship(back_populates="target")
 
 
 class Scan(Base):
@@ -51,7 +51,7 @@ class Scan(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    target: Mapped["Target"] = relationship(back_populates="scans")
+    target: Mapped[Target] = relationship(back_populates="scans")
 
 
 class Host(Base):
@@ -63,9 +63,9 @@ class Host(Base):
     first_seen_scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    endpoints: Mapped[list["Endpoint"]] = relationship(back_populates="host")
-    technologies: Mapped[list["Technology"]] = relationship(back_populates="host")
-    javascript_assets: Mapped[list["JavaScriptAsset"]] = relationship(back_populates="host")
+    endpoints: Mapped[list[Endpoint]] = relationship(back_populates="host")
+    technologies: Mapped[list[Technology]] = relationship(back_populates="host")
+    javascript_assets: Mapped[list[JavaScriptAsset]] = relationship(back_populates="host")
 
 
 class Endpoint(Base):
@@ -80,9 +80,9 @@ class Endpoint(Base):
     first_seen_scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    host: Mapped["Host"] = relationship(back_populates="endpoints")
-    parameters: Mapped[list["Parameter"]] = relationship(back_populates="endpoint")
-    forms: Mapped[list["Form"]] = relationship(back_populates="endpoint")
+    host: Mapped[Host] = relationship(back_populates="endpoints")
+    parameters: Mapped[list[Parameter]] = relationship(back_populates="endpoint")
+    forms: Mapped[list[Form]] = relationship(back_populates="endpoint")
 
 
 class Parameter(Base):
@@ -95,7 +95,7 @@ class Parameter(Base):
     observed_value: Mapped[str] = mapped_column(String(1024), nullable=True, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    endpoint: Mapped["Endpoint"] = relationship(back_populates="parameters")
+    endpoint: Mapped[Endpoint] = relationship(back_populates="parameters")
 
 
 class Form(Base):
@@ -108,7 +108,7 @@ class Form(Base):
     fields_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    endpoint: Mapped["Endpoint"] = relationship(back_populates="forms")
+    endpoint: Mapped[Endpoint] = relationship(back_populates="forms")
 
 
 class Technology(Base):
@@ -122,7 +122,7 @@ class Technology(Base):
     source: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    host: Mapped["Host"] = relationship(back_populates="technologies")
+    host: Mapped[Host] = relationship(back_populates="technologies")
 
 
 class JavaScriptAsset(Base):
@@ -136,7 +136,7 @@ class JavaScriptAsset(Base):
     first_seen_scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    host: Mapped["Host"] = relationship(back_populates="javascript_assets")
+    host: Mapped[Host] = relationship(back_populates="javascript_assets")
 
 
 class Classification(Base):

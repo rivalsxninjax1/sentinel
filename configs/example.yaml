@@ -4,10 +4,10 @@ target:
   name: "example-authorized-target"
   scope:
     allow:
-      - "https://app.example-authorized-target.test"
+      - "https://sabin-sharma.com.np"
     deny: []
   seed_urls:
-    - "https://app.example-authorized-target.test/"
+    - "https://sabin-sharma.com.np/"
   # Optional — enables real cross-identity IDOR/BOLA testing (Phase 8). Credential
   # VALUES are never written here — only the name of an environment variable that
   # must hold the actual value at scan time (e.g. `export SENTINEL_AUTH_USER_A="Bearer ..."`).
@@ -22,7 +22,7 @@ target:
   #     env_var: SENTINEL_AUTH_USER_B
 
 scan:
-  mode: passive   # passive | safe | active
+  mode: active # passive | safe | active
 
 limits:
   requests_per_second: 5

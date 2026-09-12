@@ -9,7 +9,7 @@ execution.
 from __future__ import annotations
 
 import asyncio
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 ProcessRunner = Callable[[list[str], float], Awaitable[tuple[int, str, str]]]
 
@@ -26,7 +26,7 @@ async def default_process_runner(args: list[str], timeout_seconds: float) -> tup
         stdout_bytes, stderr_bytes = await asyncio.wait_for(
             proc.communicate(), timeout=timeout_seconds
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         proc.kill()
         await proc.wait()
         raise ToolTimeoutError(f"{' '.join(args)} exceeded {timeout_seconds}s timeout")

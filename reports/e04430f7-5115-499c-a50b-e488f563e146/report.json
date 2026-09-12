@@ -1,0 +1,10 @@
+{
+  "scan_id": "e04430f7-5115-499c-a50b-e488f563e146",
+  "target_name": "quick-scan-in-sharma.com.np",
+  "scan_mode": "active",
+  "generated_at": "2026-09-12T15:54:04.492682+00:00",
+  "findings": [],
+  "excluded_false_positives": [],
+  "summary_by_disposition": {},
+  "summary_by_severity": {}
+}

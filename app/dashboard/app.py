@@ -1,32 +1,44 @@
-"""Local read-only dashboard over the scan database.
+"""Local read-only-plus-quickscan dashboard over the scan database.
 
 Per docs/architecture.md §11 (Dashboard): shows scan status, attack surface,
 endpoints, parameters, technologies, findings, severity, confidence, evidence,
-tool results, and AI reasoning. This is a READ-ONLY view — no route here creates,
-modifies, or deletes anything; every mutation still happens exclusively through the
-CLI's `scan ...` commands, which is the only place scope/mode/lifecycle rules are
-enforced. The dashboard is a viewer, not a second orchestrator.
+tool results, and AI reasoning. Every VIEW route is read-only — no route reads
+findings/attack-surface data and modifies anything. The one exception is
+`POST /scans/quick-start` (added alongside this docstring update): it lets the
+operator start a scan directly from a URL/IP typed into the home page instead of
+hand-writing a YAML config and running six CLI commands. It does this by writing
+the same config file structure those commands already require and invoking those
+exact same CLI commands as subprocesses — it does not talk to the scope engine or
+database directly, and does not add any new mutation path beyond "the CLI, but
+automated." See app/dashboard/quickscan.py.
 
-`fastapi`/`uvicorn`/`jinja2` are optional dependencies (`pip install -e
-".[dashboard]"`) — the same graceful-unavailable pattern used for Playwright
-(Phase 3) and `websockets` (Phase 8). `create_dashboard_app()` raises a clear
-`DashboardUnavailable` if FastAPI isn't installed, rather than the CLI command
-crashing with an unhelpful ImportError.
+`fastapi`/`uvicorn`/`jinja2`/`python-multipart` are optional dependencies (`pip
+install -e ".[dashboard]"`) — the same graceful-unavailable pattern used for
+Playwright (Phase 3) and `websockets` (Phase 8). `create_dashboard_app()` raises a
+clear `DashboardUnavailable` if FastAPI isn't installed, rather than the CLI
+command crashing with an unhelpful ImportError.
 
 SECURITY NOTE: this server binds to 127.0.0.1 by default (see
 app/cli/main.py's `dashboard` command) and has NO AUTHENTICATION — anyone who can
-reach the bound host/port can view every scan's findings, including reflected
-target content. Do not bind this to 0.0.0.0 or expose it beyond localhost without
-adding authentication first; that is explicitly out of scope for this phase (see
-docs/dashboard.md).
+reach the bound host/port can view every scan's findings AND start new scans
+against arbitrary URLs. Do not bind this to 0.0.0.0 or expose it beyond localhost
+without adding authentication first; that is explicitly out of scope for this
+phase (see docs/dashboard.md).
 """
 
 from __future__ import annotations
 
 from app.dashboard import templates
+from app.dashboard.quickscan import (
+    QuickScanError,
+    build_temp_config,
+    parse_target_input,
+    run_remaining_pipeline,
+    run_scan_create,
+)
 from app.reporting.builder import ReportBuilder
 from app.reporting.renderers import html_renderer
-from app.storage.db import get_engine, make_session_factory, session_scope
+from app.storage.db import get_engine, init_db, make_session_factory, session_scope
 from app.storage.repository import (
     AttackSurfaceRepository,
     FindingsRepository,
@@ -36,14 +48,17 @@ from app.storage.repository import (
 )
 
 try:
-    from fastapi import FastAPI, HTTPException
-    from fastapi.responses import HTMLResponse
+    from fastapi import BackgroundTasks, FastAPI, Form, HTTPException
+    from fastapi.responses import HTMLResponse, RedirectResponse
 
     _FASTAPI_AVAILABLE = True
 except Exception as exc:  # pragma: no cover - exercised only when fastapi is absent
     FastAPI = None  # type: ignore[assignment]
     HTTPException = None  # type: ignore[assignment]
     HTMLResponse = None  # type: ignore[assignment]
+    RedirectResponse = None  # type: ignore[assignment]
+    BackgroundTasks = None  # type: ignore[assignment]
+    Form = None  # type: ignore[assignment]
     _FASTAPI_AVAILABLE = False
     _FASTAPI_IMPORT_ERROR: Exception | None = exc
 else:
@@ -78,8 +93,20 @@ def create_dashboard_app(storage_path: str):
     engine = get_engine(storage_path)
     session_factory = make_session_factory(engine)
 
+    # Every route calls init_db() first. This is intentionally NOT a FastAPI
+    # startup/lifespan event: `init_db()` is idempotent (create_all is a no-op
+    # once tables exist — see app/storage/db.py), and lifespan events don't fire
+    # under every ASGI test transport (including the one this project's own test
+    # suite uses, httpx.ASGITransport, unless a lifespan-aware context manager
+    # wraps it) — relying on lifespan would mean "works under uvicorn in
+    # production, silently skipped and fails in tests," exactly backwards from
+    # what a regression test should catch. A cheap idempotent check per request
+    # is simpler and correct in both places. Matches every `scan ...` CLI command,
+    # which also calls init_db() before touching the database.
+
     @app.get("/", response_class=HTMLResponse)
     async def home() -> str:
+        await init_db(engine)
         async with session_scope(session_factory) as session:
             scans_repo = ScanRepository(session)
             rows = await scans_repo.list_all_with_target()
@@ -96,8 +123,40 @@ def create_dashboard_app(storage_path: str):
             ]
         return templates.render_home(scans)
 
+    @app.post("/scans/quick-start")
+    async def quick_start(
+        background_tasks: BackgroundTasks,
+        target_input: str = Form(...),
+        mode: str = Form("safe"),
+        authorized: str | None = Form(None),
+    ):
+        if not authorized:
+            return HTMLResponse(
+                templates.render_error(
+                    "Authorization required",
+                    "You must confirm you are authorized to test this target before a scan can start.",
+                ),
+                status_code=400,
+            )
+
+        try:
+            target_name, hostname, seed_url = parse_target_input(target_input)
+            config_path = build_temp_config(target_name, hostname, seed_url, mode, storage_path)
+            scan_id = await run_scan_create(config_path)
+        except QuickScanError as exc:
+            return HTMLResponse(templates.render_error("Could not start scan", str(exc)), status_code=400)
+
+        # The rest of the pipeline (crawl -> discover-js -> classify -> test ->
+        # verify -> report) runs in the background so this request returns
+        # immediately; the operator lands on the scan overview page and can
+        # refresh to watch it progress through lifecycle states.
+        background_tasks.add_task(run_remaining_pipeline, config_path, scan_id)
+
+        return RedirectResponse(url=f"/scans/{scan_id}", status_code=303)
+
     @app.get("/scans/{scan_id}", response_class=HTMLResponse)
     async def scan_overview(scan_id: str) -> str:
+        await init_db(engine)
         async with session_scope(session_factory) as session:
             scans_repo = ScanRepository(session)
             scan = await scans_repo.get(scan_id)
@@ -118,10 +177,6 @@ def create_dashboard_app(storage_path: str):
                 endpoint_count += len(endpoints)
                 parameter_count += sum(len(e.parameters) for e in endpoints)
                 technology_count += len(await attack_surface.list_technologies_for_host(host.id))
-                # JS asset count: no dedicated list method exists yet (Phase 3 only
-                # added add_javascript_asset with get-or-create dedup) — omitted
-                # from the count rather than adding an unused new query just for a
-                # dashboard number; shown as "-" if not orchestrated separately.
 
             findings_repo = FindingsRepository(session)
             builder = ReportBuilder(scans_repo, targets_repo, findings_repo)
@@ -159,22 +214,20 @@ def create_dashboard_app(storage_path: str):
 
     @app.get("/scans/{scan_id}/findings", response_class=HTMLResponse)
     async def scan_findings(scan_id: str) -> str:
+        await init_db(engine)
         async with session_scope(session_factory) as session:
             scans_repo = ScanRepository(session)
             scan = await scans_repo.get(scan_id)
             if scan is None:
                 raise HTTPException(status_code=404, detail="Scan not found")
 
-            builder = ReportBuilder(
-                scans_repo, TargetRepository(session), FindingsRepository(session)
-            )
+            builder = ReportBuilder(scans_repo, TargetRepository(session), FindingsRepository(session))
             report = await builder.build(scan_id)
-        # Reuses Phase 10's already-escaped, already-tested HTML renderer directly
-        # rather than re-implementing findings display in a dashboard template.
         return html_renderer.render(report)
 
     @app.get("/scans/{scan_id}/attack-surface", response_class=HTMLResponse)
     async def scan_attack_surface(scan_id: str) -> str:
+        await init_db(engine)
         async with session_scope(session_factory) as session:
             scans_repo = ScanRepository(session)
             scan = await scans_repo.get(scan_id)
@@ -208,6 +261,7 @@ def create_dashboard_app(storage_path: str):
 
     @app.get("/scans/{scan_id}/classifications", response_class=HTMLResponse)
     async def scan_classifications(scan_id: str) -> str:
+        await init_db(engine)
         async with session_scope(session_factory) as session:
             scans_repo = ScanRepository(session)
             scan = await scans_repo.get(scan_id)

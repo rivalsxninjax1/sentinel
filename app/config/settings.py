@@ -108,7 +108,7 @@ class SentinelConfig(BaseSettings):
     log_level: str = "INFO"
 
     @classmethod
-    def from_yaml(cls, path: str | Path, **env_overrides: Any) -> "SentinelConfig":
+    def from_yaml(cls, path: str | Path, **env_overrides: Any) -> SentinelConfig:
         """Load config from a YAML file, then apply env-var overrides via BaseSettings."""
         yaml_path = Path(path)
         if not yaml_path.is_file():

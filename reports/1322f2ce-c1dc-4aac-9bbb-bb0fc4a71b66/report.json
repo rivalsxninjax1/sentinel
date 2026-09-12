@@ -1,0 +1,200 @@
+{
+  "scan_id": "1322f2ce-c1dc-4aac-9bbb-bb0fc4a71b66",
+  "target_name": "quick-scan-sabin-sharma.com.np",
+  "scan_mode": "active",
+  "generated_at": "2026-09-12T15:56:53.838999+00:00",
+  "findings": [
+    {
+      "id": "ca1fc04a-c880-483c-b3fe-e862f45a5ae8",
+      "title": "Missing security header: Content-Security-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "medium",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Content-Security-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-12T15:56:52.165415",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "76b2d89c-ba0f-4ad4-b57f-c2549aa3d5e0",
+      "title": "Missing security header: X-Frame-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Frame-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-12T15:56:52.169792",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "2486bead-c68a-49d4-a65f-91b6c3d347f2",
+      "title": "Missing security header: X-Content-Type-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Content-Type-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-12T15:56:52.172960",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "5e87dce4-9ba2-458d-b6a3-217b12bed52d",
+      "title": "Missing security header: Referrer-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Referrer-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-12T15:56:52.175388",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "78894469-651f-4433-a858-0a69944a85f9",
+      "title": "'server' header discloses: Netlify",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://sabin-sharma.com.np/",
+      "description": "server: Netlify",
+      "metadata": {
+        "header": "server",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "server: Netlify"
+      ],
+      "created_at": "2026-09-12T15:56:52.177540",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "b558d255-8517-47f7-943f-98a015177a26",
+      "title": "POST form has no anti-CSRF token field",
+      "vulnerability_class": "csrf",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "needs_manual_review",
+      "disposition": "Requires Manual Verification",
+      "matched_endpoint": "https://sabin-sharma.com.np/submit",
+      "description": "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']",
+      "metadata": {
+        "vulnerability_class": "csrf",
+        "confidence": "low",
+        "note": "absence of a token field name is suggestive, not proof (token could be delivered via header or double-submit cookie instead)"
+      },
+      "evidence": [
+        "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']"
+      ],
+      "created_at": "2026-09-12T15:56:52.179272",
+      "cwe_id": "CWE-352",
+      "cwe_name": "Cross-Site Request Forgery (CSRF)",
+      "impact": "Allows tricking an authenticated victim's browser into submitting a state-changing request without their knowledge or consent.",
+      "remediation": "Use anti-CSRF tokens tied to the user's session for every state-changing form, and set cookies with SameSite=Lax or Strict.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "e9fd8970-e44d-4ee7-a2aa-00a9b18a89cd",
+      "title": "POST form has no anti-CSRF token field",
+      "vulnerability_class": "csrf",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "needs_manual_review",
+      "disposition": "Requires Manual Verification",
+      "matched_endpoint": "https://sabin-sharma.com.np/submit",
+      "description": "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']",
+      "metadata": {
+        "vulnerability_class": "csrf",
+        "confidence": "low",
+        "note": "absence of a token field name is suggestive, not proof (token could be delivered via header or double-submit cookie instead)"
+      },
+      "evidence": [
+        "form fields: ['access_key', 'subject', 'from_name', 'name', 'email', 'subject', 'message']"
+      ],
+      "created_at": "2026-09-12T15:56:52.180693",
+      "cwe_id": "CWE-352",
+      "cwe_name": "Cross-Site Request Forgery (CSRF)",
+      "impact": "Allows tricking an authenticated victim's browser into submitting a state-changing request without their knowledge or consent.",
+      "remediation": "Use anti-CSRF tokens tied to the user's session for every state-changing form, and set cookies with SameSite=Lax or Strict.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    }
+  ],
+  "excluded_false_positives": [],
+  "summary_by_disposition": {
+    "Likely": 5,
+    "Requires Manual Verification": 2
+  },
+  "summary_by_severity": {
+    "medium": 3,
+    "low": 2,
+    "info": 2
+  }
+}

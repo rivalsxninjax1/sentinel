@@ -25,24 +25,22 @@ import httpx
 import typer
 
 from app.config.settings import SentinelConfig
+from app.core.auth_context import AuthContextConfig, build_contexts
 from app.core.http_client import SentinelHTTPClient
-from app.core.lifecycle import InvalidTransition, ScanLifecycle, ScanState
+from app.core.lifecycle import ScanLifecycle, ScanState
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limiter import RateLimiter
-from app.core.auth_context import AuthContextConfig, build_contexts
 from app.core.test_orchestrator import TestOrchestrator
 from app.crawler.browser import BrowserDiscovery, BrowserEngine, BrowserUnavailable
 from app.crawler.crawler import Crawler
 from app.intelligence.javascript import JSExtractionResult, extract_from_js
 from app.intelligence.reasoning import SecurityReasoningEngine
 from app.llm.ollama_provider import OllamaProvider
+from app.reporting.builder import ReportBuilder
+from app.reporting.renderers import html_renderer, json_renderer, markdown_renderer
 from app.scanners.registry import build_default_scanners
 from app.scope.engine import ScopeEngine, ScopeViolation
 from app.storage.db import get_engine, init_db, make_session_factory, session_scope
-from app.reporting.builder import ReportBuilder
-from app.reporting.renderers import html_renderer, json_renderer, markdown_renderer
-from app.verification.correlation import CorrelationEngine
-from app.verification.engine import VerificationEngine
 from app.storage.repository import (
     AttackSurfaceRepository,
     FindingsRepository,
@@ -51,6 +49,8 @@ from app.storage.repository import (
     TargetRepository,
 )
 from app.tools.registry import build_default_registry
+from app.verification.correlation import CorrelationEngine
+from app.verification.engine import VerificationEngine
 
 app = typer.Typer(help="SENTINEL — authorized web application security testing platform.")
 scan_app = typer.Typer(help="Scan lifecycle commands.")

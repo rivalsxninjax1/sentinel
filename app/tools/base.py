@@ -82,7 +82,7 @@ class SecurityToolAdapter(ABC):
         """Raise ToolConfigError if this adapter shouldn't run in this context.
         Default: no extra constraints beyond scope. Override for e.g. tools that
         require ACTIVE mode."""
-        return None
+        return
 
     @abstractmethod
     def build_command(self, context: ToolExecutionContext) -> list[str]:
@@ -135,4 +135,4 @@ class SecurityToolAdapter(ABC):
 
     async def cleanup(self) -> None:
         """Default no-op. Override for adapters that create temp files/output dirs."""
-        return None
+        return
