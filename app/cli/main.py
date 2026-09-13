@@ -537,11 +537,26 @@ def scan_classify(
 
         await provider.aclose()
 
+        diagnostic = ""
+        if not ai_available:
+            diagnostic = (
+                f"\n[!] Ollama was unreachable at {cfg.llm.base_url!r} — every "
+                f"classification used fallback. Check that `ollama serve` is running."
+            )
+        elif ai_available and ai_count == 0 and classified_count > 0:
+            diagnostic = (
+                f"\n[!] Ollama responded, but every classification still fell back. "
+                f"The configured model {cfg.llm.model!r} likely doesn't exist on this "
+                f"machine. Run `ollama list` and make sure llm.model in your config "
+                f"matches one of those names exactly (including tag, e.g. "
+                f"'llama3.1:8b' vs 'llama3.1:8b-instruct-q4_K_M')."
+            )
+
         typer.echo(
             f"Classified {classified_count} endpoint/parameter pairs "
             f"({ai_count} via AI, {fallback_count} fallback"
             f"{' — LLM unreachable' if not ai_available else ''}). "
-            f"Scan advanced to INTELLIGENCE."
+            f"Scan advanced to INTELLIGENCE.{diagnostic}"
         )
 
     asyncio.run(_run())

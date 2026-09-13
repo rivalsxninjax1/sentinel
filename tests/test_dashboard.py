@@ -329,7 +329,12 @@ async def test_quick_start_creates_scan_and_redirects(tmp_path, monkeypatch):
     async with await _client(app) as client:
         response = await client.post(
             "/scans/quick-start",
-            data={"target_input": "example.com", "mode": "safe", "authorized": "yes"},
+            data={
+                "target_input": "example.com",
+                "mode": "safe",
+                "authorized": "yes",
+                "ollama_model": "llama3.1:8b",  # avoids a real network autodetect attempt in tests
+            },
             follow_redirects=False,
         )
 

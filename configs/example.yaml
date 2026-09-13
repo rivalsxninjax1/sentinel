@@ -5,6 +5,7 @@ target:
   scope:
     allow:
       - "https://sabin-sharma.com.np"
+      - "https://emis.cehrd.gov.np"
     deny: []
   seed_urls:
     - "https://sabin-sharma.com.np/"
@@ -32,6 +33,6 @@ limits:
 
 llm:
   provider: ollama
-  model: "CHANGE_ME"
+  model: "llama3.1:8b-instruct-q4_K_M"
   base_url: "http://localhost:11434"
   temperature: 0

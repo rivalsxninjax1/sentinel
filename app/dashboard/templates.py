@@ -93,6 +93,13 @@ placeholder="https://example.com, example.com, or 10.0.0.5" required>
 <div class="mode-hint">Start with passive/safe. Only use active mode against
 targets you're explicitly authorized to actively test.</div>
 
+<label for="ollama_model">Ollama model (optional)</label>
+<input type="text" id="ollama_model" name="ollama_model"
+placeholder="leave blank to auto-detect from your local Ollama">
+<div class="mode-hint">Only affects AI-assisted classification (Phase 4) —
+scanning still runs fully without it. Run <code>ollama list</code> to see your
+exact model name (e.g. <code>llama3.1:8b</code>) if auto-detect picks the wrong one.</div>
+
 <div class="auth-row">
 <input type="checkbox" id="authorized" name="authorized" value="yes" required>
 <label for="authorized" style="margin:0;font-weight:normal;">

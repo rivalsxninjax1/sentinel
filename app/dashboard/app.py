@@ -128,6 +128,7 @@ def create_dashboard_app(storage_path: str):
         background_tasks: BackgroundTasks,
         target_input: str = Form(...),
         mode: str = Form("safe"),
+        ollama_model: str = Form(""),
         authorized: str | None = Form(None),
     ):
         if not authorized:
@@ -141,7 +142,10 @@ def create_dashboard_app(storage_path: str):
 
         try:
             target_name, hostname, seed_url = parse_target_input(target_input)
-            config_path = build_temp_config(target_name, hostname, seed_url, mode, storage_path)
+            config_path = await build_temp_config(
+                target_name, hostname, seed_url, mode, storage_path,
+                ollama_model=ollama_model or None,
+            )
             scan_id = await run_scan_create(config_path)
         except QuickScanError as exc:
             return HTMLResponse(templates.render_error("Could not start scan", str(exc)), status_code=400)

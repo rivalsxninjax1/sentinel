@@ -1,0 +1,246 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'>
+<title>SENTINEL Report - quick-scan-emis.cehrd.gov.np</title>
+<style>
+body{font-family:-apple-system,Helvetica,Arial,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1f2937;}h1{font-size:1.5rem;} h2{margin-top:2rem;border-bottom:1px solid #e5e7eb;padding-bottom:.25rem;}.finding{border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin:1rem 0;}.badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;color:white;font-size:.8rem;margin-right:.5rem;}table{border-collapse:collapse;} td,th{padding:.25rem .75rem;text-align:left;border-bottom:1px solid #e5e7eb;}pre{background:#f9fafb;padding:.75rem;border-radius:6px;overflow-x:auto;}
+</style></head><body>
+<h1>SENTINEL Security Report — quick-scan-emis.cehrd.gov.np</h1>
+<p><strong>Scan ID:</strong> 85e30d08-f2ca-4162-970b-00e09baf57de<br><strong>Scan mode:</strong> active<br><strong>Generated:</strong> 2026-09-13T15:10:39.503253+00:00</p>
+<h2>Summary</h2><table>
+<tr><td><span class='badge' style='background:#b91c1c'>Likely</span></td><td>4</td></tr>
+<tr><td><span class='badge' style='background:#b45309'>Potential</span></td><td>9</td></tr>
+</table>
+<h2>Likely (4)</h2>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: Content-Security-Policy</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Missing security header: Referrer-Policy</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>info</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+</table>
+<p><strong>Description:</strong> status=200</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>&#x27;server&#x27; header discloses: Microsoft-IIS/10.0</strong>
+<table>
+<tr><td>Vulnerability class</td><td>security_headers</td></tr>
+<tr><td>Severity</td><td>info</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-693 — Protection Mechanism Failure</td></tr>
+</table>
+<p><strong>Description:</strong> server: Microsoft-IIS/10.0</p>
+<p><strong>Impact:</strong> Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.</p>
+<p><strong>Remediation:</strong> Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.</p>
+<p><strong>Evidence:</strong></p>
+<pre>server: Microsoft-IIS/10.0</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b91c1c'>Likely</span>
+<strong>Endpoint declares potentially sensitive HTTP methods: TRACE</strong>
+<table>
+<tr><td>Vulnerability class</td><td>http_method_enumeration</td></tr>
+<tr><td>Severity</td><td>low</td></tr>
+<tr><td>Confidence</td><td>high</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/</code></td></tr>
+<tr><td>CWE</td><td>CWE-650 — Trusting HTTP Permission Methods on the Server Side</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>3.1</td></tr>
+</table>
+<p><strong>Description:</strong> Allow: OPTIONS, TRACE, GET, HEAD, POST</p>
+<p><strong>Impact:</strong> Declaring PUT/DELETE/PATCH as allowed doesn&#x27;t by itself confirm they&#x27;re exploitable, but often indicates the endpoint wasn&#x27;t designed with per-method authorization in mind.</p>
+<p><strong>Remediation:</strong> Explicitly restrict allowed methods per route at the framework/routing layer, and apply the same authorization checks regardless of which method reaches a given handler.</p>
+<p><strong>Evidence:</strong></p>
+<pre>Allow: OPTIONS, TRACE, GET, HEAD, POST</pre>
+</div>
+<h2>Potential (9)</h2>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /.git/HEAD</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/.git/HEAD</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /.env</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/.env</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /.DS_Store</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/.DS_Store</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /backup.zip</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/backup.zip</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /backup.sql</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/backup.sql</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /wp-config.php.bak</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/wp-config.php.bak</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /config.php.bak</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/config.php.bak</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /.svn/entries</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/.svn/entries</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+<div class='finding'>
+<span class='badge' style='background:#b45309'>Potential</span>
+<strong>Potentially exposed sensitive file: /web.config.bak</strong>
+<table>
+<tr><td>Vulnerability class</td><td>information_exposure</td></tr>
+<tr><td>Severity</td><td>medium</td></tr>
+<tr><td>Confidence</td><td>low</td></tr>
+<tr><td>Verification status</td><td>verified</td></tr>
+<tr><td>Endpoint</td><td><code>https://emis.cehrd.gov.np/web.config.bak</code></td></tr>
+<tr><td>CWE</td><td>CWE-200 — Exposure of Sensitive Information to an Unauthorized Actor</td></tr>
+<tr><td>Approximate CVSS (severity-based estimate)</td><td>5.4</td></tr>
+</table>
+<p><strong>Description:</strong> status=200, length=5973</p>
+<p><strong>Impact:</strong> Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.</p>
+<p><strong>Remediation:</strong> Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.</p>
+<p><strong>Evidence:</strong></p>
+<pre>status=200, length=5973</pre>
+</div>
+</body></html>

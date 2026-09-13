@@ -56,9 +56,11 @@ def test_parse_unparseable_input_raises():
         parse_target_input("https:///no-host")
 
 
-def test_build_temp_config_writes_valid_yaml(tmp_path):
-    config_path = build_temp_config(
-        "quick-scan-example.com", "example.com", "https://example.com/", "safe", str(tmp_path / "db.sqlite")
+@pytest.mark.asyncio
+async def test_build_temp_config_writes_valid_yaml_with_explicit_model(tmp_path):
+    config_path = await build_temp_config(
+        "quick-scan-example.com", "example.com", "https://example.com/", "safe",
+        str(tmp_path / "db.sqlite"), ollama_model="llama3.1:8b",
     )
     assert config_path.exists()
     data = yaml.safe_load(config_path.read_text())
@@ -66,12 +68,77 @@ def test_build_temp_config_writes_valid_yaml(tmp_path):
     assert data["target"]["scope"]["allow"] == ["example.com"]
     assert data["target"]["seed_urls"] == ["https://example.com/"]
     assert data["scan"]["mode"] == "safe"
+    assert data["llm"]["provider"] == "ollama"
+    assert data["llm"]["model"] == "llama3.1:8b"
     config_path.unlink()
 
 
-def test_build_temp_config_rejects_invalid_mode(tmp_path):
+@pytest.mark.asyncio
+async def test_build_temp_config_does_not_autodetect_when_model_given(tmp_path):
+    calls = []
+
+    async def fake_autodetect(base_url):
+        calls.append(base_url)
+        return "should-not-be-used"
+
+    config_path = await build_temp_config(
+        "n", "example.com", "https://example.com/", "safe", str(tmp_path / "db.sqlite"),
+        ollama_model="llama3.1:8b", autodetect=fake_autodetect,
+    )
+    data = yaml.safe_load(config_path.read_text())
+    assert data["llm"]["model"] == "llama3.1:8b"
+    assert calls == []  # autodetect never called — explicit model short-circuits it
+    config_path.unlink()
+
+
+@pytest.mark.asyncio
+async def test_build_temp_config_autodetects_when_model_blank(tmp_path):
+    async def fake_autodetect(base_url):
+        return "llama3.1:8b-instruct-q4_K_M"
+
+    config_path = await build_temp_config(
+        "n", "example.com", "https://example.com/", "safe", str(tmp_path / "db.sqlite"),
+        ollama_model=None, autodetect=fake_autodetect,
+    )
+    data = yaml.safe_load(config_path.read_text())
+    assert data["llm"]["model"] == "llama3.1:8b-instruct-q4_K_M"
+    config_path.unlink()
+
+
+@pytest.mark.asyncio
+async def test_build_temp_config_autodetects_when_model_whitespace_only(tmp_path):
+    async def fake_autodetect(base_url):
+        return "auto-picked-model"
+
+    config_path = await build_temp_config(
+        "n", "example.com", "https://example.com/", "safe", str(tmp_path / "db.sqlite"),
+        ollama_model="   ", autodetect=fake_autodetect,
+    )
+    data = yaml.safe_load(config_path.read_text())
+    assert data["llm"]["model"] == "auto-picked-model"
+    config_path.unlink()
+
+
+@pytest.mark.asyncio
+async def test_build_temp_config_falls_back_when_autodetect_fails(tmp_path):
+    async def fake_autodetect(base_url):
+        return None
+
+    config_path = await build_temp_config(
+        "n", "example.com", "https://example.com/", "safe", str(tmp_path / "db.sqlite"),
+        ollama_model=None, autodetect=fake_autodetect,
+    )
+    data = yaml.safe_load(config_path.read_text())
+    assert data["llm"]["model"] == "llama3"  # last-resort default
+    config_path.unlink()
+
+
+@pytest.mark.asyncio
+async def test_build_temp_config_rejects_invalid_mode(tmp_path):
     with pytest.raises(QuickScanError):
-        build_temp_config("n", "example.com", "https://example.com/", "bogus-mode", str(tmp_path / "db.sqlite"))
+        await build_temp_config(
+            "n", "example.com", "https://example.com/", "bogus-mode", str(tmp_path / "db.sqlite")
+        )
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,382 @@
+{
+  "scan_id": "6fa1f3e3-704c-40ce-839f-037f7a2d3b08",
+  "target_name": "quick-scan-nihareekacollege.edu.np",
+  "scan_mode": "active",
+  "generated_at": "2026-09-13T01:51:10.884698+00:00",
+  "findings": [
+    {
+      "id": "61fd6905-91e5-4878-8ed8-c2f7d0afcb4f",
+      "title": "Missing security header: Content-Security-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "medium",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://nihareekacollege.edu.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Content-Security-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T01:51:09.202905",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "55657961-2eed-4174-b159-f5fb28fa03c9",
+      "title": "Missing security header: X-Frame-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://nihareekacollege.edu.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Frame-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T01:51:09.208728",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "b798ecd1-ae45-4641-9f9f-f142de1371d3",
+      "title": "Missing security header: X-Content-Type-Options",
+      "vulnerability_class": "security_headers",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://nihareekacollege.edu.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "X-Content-Type-Options",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T01:51:09.211222",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    },
+    {
+      "id": "218d64da-00c9-4cca-aa2e-07c71ca1a822",
+      "title": "Missing security header: Referrer-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://nihareekacollege.edu.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Referrer-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T01:51:09.213489",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "8f3cab65-1c5a-4912-93ae-76b1f8bc0509",
+      "title": "'server' header discloses: Netlify",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://nihareekacollege.edu.np/",
+      "description": "server: Netlify",
+      "metadata": {
+        "header": "server",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "server: Netlify"
+      ],
+      "created_at": "2026-09-13T01:51:09.215927",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "8cbbf90e-43d3-42a9-a01e-3ae4ae024a98",
+      "title": "Potentially exposed sensitive file: /.git/HEAD",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/.git/HEAD",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": ".git/HEAD",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.218157",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "2a045e3e-ab7e-43db-8cc9-bcb714d7aea9",
+      "title": "Potentially exposed sensitive file: /.env",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/.env",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": ".env",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.220165",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "5fccf891-f722-4146-814b-aafb527aaf51",
+      "title": "Potentially exposed sensitive file: /.DS_Store",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/.DS_Store",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": ".DS_Store",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.222142",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "af3d4e0e-8a1b-40b1-bbed-99e8f6e42511",
+      "title": "Potentially exposed sensitive file: /backup.zip",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/backup.zip",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": "backup.zip",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.223891",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "0200d86e-d7ef-43ee-8ad9-f2a85bd1b548",
+      "title": "Potentially exposed sensitive file: /backup.sql",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/backup.sql",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": "backup.sql",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.225575",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "08221e04-83c6-4a1f-93e4-384e0385a33a",
+      "title": "Potentially exposed sensitive file: /wp-config.php.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/wp-config.php.bak",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": "wp-config.php.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.227198",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "6e10e35b-7569-45bd-8aef-cbd6f1e5d2ee",
+      "title": "Potentially exposed sensitive file: /config.php.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/config.php.bak",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": "config.php.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.228884",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "6562f9f7-fb27-470e-b343-8ed928dc6917",
+      "title": "Potentially exposed sensitive file: /.svn/entries",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/.svn/entries",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": ".svn/entries",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.230474",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "eafee1ad-e576-4584-bb82-a0047b05be46",
+      "title": "Potentially exposed sensitive file: /web.config.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://nihareekacollege.edu.np/web.config.bak",
+      "description": "status=200, length=1180",
+      "metadata": {
+        "path": "web.config.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=1180"
+      ],
+      "created_at": "2026-09-13T01:51:09.231956",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    }
+  ],
+  "excluded_false_positives": [],
+  "summary_by_disposition": {
+    "Likely": 5,
+    "Potential": 9
+  },
+  "summary_by_severity": {
+    "medium": 10,
+    "low": 2,
+    "info": 2
+  }
+}
