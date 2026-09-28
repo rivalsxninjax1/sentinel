@@ -2,10 +2,10 @@ target:
   name: "my-test-target"
   scope:
     allow:
-      - "https://www.hamrobiratnagar.com" # <-- your actual authorized target
+      - "https://emis.cehrd.gov.np"# <-- your actual authorized target
     deny: []
   seed_urls:
-    - "https://www.hamrobiratnagar.com/" # <-- where the crawler starts
+    - "https://emis.cehrd.gov.np/" # <-- where the crawler starts
 
 scan:
   mode: active # start with passive, escalate deliberately — see below
@@ -13,12 +13,12 @@ scan:
 limits:
   requests_per_second: 5
   concurrency: 3
-  max_requests: 10000
-  max_crawl_depth: 3
+  max_requests: 500000
+  max_crawl_depth: 10
 
 llm:
   provider: ollama
-  model: "llama3" # only matters if you're running Ollama
+  model: "llama3.1:8b-instruct-q4_K_M" # only matters if you're running Ollama
   base_url: "http://localhost:11434"
   temperature: 0
 

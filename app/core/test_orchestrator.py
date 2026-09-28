@@ -4,9 +4,10 @@ runs against a given endpoint/parameter/form.
 Per docs/architecture.md §44/§5: AI recommendations (Phase 4 `Classification` rows)
 may inform *which* parameters get extra scanner attention, but nothing in this class
 takes instructions from the AI directly — it only ever reads scan configuration
-(mode, configured auth identities) and attack-surface facts (parameter names, form
-fields) that the orchestrator itself decided were worth checking. There is no code
-path from app/llm/ or app/intelligence/reasoning.py into this file.
+(mode, configured auth identities, configured OOB client) and attack-surface facts
+(parameter names, form fields) that the orchestrator itself decided were worth
+checking. There is no code path from app/llm/ or app/intelligence/reasoning.py into
+this file.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from dataclasses import dataclass, field
 from app.core.auth_context import AuthenticationContext
 from app.core.http_client import SentinelHTTPClient
 from app.core.logging import get_logger
+from app.oob.client import OOBClient
 from app.scanners.base import DeterministicScanner, ScanTarget, mode_allows
 from app.tools.models import NormalizedFinding
 
@@ -42,41 +44,35 @@ class TestOrchestrator:
         scanners: list[DeterministicScanner],
         mode: str,
         auth_contexts: list[AuthenticationContext] | None = None,
+        oob_client: OOBClient | None = None,
+        scan_id: str | None = None,
     ) -> None:
         self._scanners = scanners
         self._mode = mode
         self._auth_contexts = auth_contexts or []
+        self._oob_client = oob_client
+        self._scan_id = scan_id
 
     async def run_host_level(
         self, host_root_url: str, http_client: SentinelHTTPClient
     ) -> OrchestrationResult:
-        """Runs scanners that operate once per host (security headers, information
-        exposure, CORS, JWT) rather than per-parameter."""
         result = OrchestrationResult()
         target = ScanTarget(url=host_root_url, method="GET")
-
         for scanner in self._scanners:
             if scanner.name not in _HOST_LEVEL_SCANNERS:
                 continue
             await self._run_one(scanner, target, http_client, result)
-
         return result
 
     async def run_endpoint_level(
         self, endpoint_url: str, method: str, http_client: SentinelHTTPClient
     ) -> OrchestrationResult:
-        """Runs scanners that need just an endpoint URL/method with no specific
-        parameter or form (GraphQL introspection, WebSocket handshake auth, HTTP
-        method enumeration). Each of these self-gates on URL shape (e.g. GraphQL
-        introspection only runs if "graphql" is in the URL)."""
         result = OrchestrationResult()
         target = ScanTarget(url=endpoint_url, method=method)
-
         for scanner in self._scanners:
             if scanner.name not in _ENDPOINT_LEVEL_SCANNERS:
                 continue
             await self._run_one(scanner, target, http_client, result)
-
         return result
 
     async def run_parameter_level(
@@ -87,7 +83,6 @@ class TestOrchestrator:
         parameter_location: str,
         http_client: SentinelHTTPClient,
     ) -> OrchestrationResult:
-        """Runs scanners that need a specific parameter to inject a payload into."""
         result = OrchestrationResult()
         target = ScanTarget(
             url=endpoint_url,
@@ -95,6 +90,8 @@ class TestOrchestrator:
             parameter_name=parameter_name,
             parameter_location=parameter_location,
             auth_contexts=self._auth_contexts,
+            oob_client=self._oob_client,
+            oob_scan_id=self._scan_id,
         )
 
         for scanner in self._scanners:
@@ -119,16 +116,18 @@ class TestOrchestrator:
         form_fields: list[dict],
         http_client: SentinelHTTPClient,
     ) -> OrchestrationResult:
-        """Runs scanners that need the whole form's field structure (CSRF, file
-        upload, XXE, mass assignment) rather than a single parameter."""
         result = OrchestrationResult()
-        target = ScanTarget(url=endpoint_url, method=method, form_fields=form_fields)
-
+        target = ScanTarget(
+            url=endpoint_url,
+            method=method,
+            form_fields=form_fields,
+            oob_client=self._oob_client,
+            oob_scan_id=self._scan_id,
+        )
         for scanner in self._scanners:
             if scanner.name not in _FORM_LEVEL_SCANNERS:
                 continue
             await self._run_one(scanner, target, http_client, result)
-
         return result
 
     async def _run_one(
@@ -145,7 +144,7 @@ class TestOrchestrator:
             findings = await scanner.scan(target, http_client)
             result.findings.extend(findings)
             result.scanners_run += 1
-        except Exception as exc:  # a single scanner's bug must not abort the whole run
+        except Exception as exc:
             logger.warning(
                 "scanner_failed",
                 scanner=scanner.name,

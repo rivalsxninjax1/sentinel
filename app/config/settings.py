@@ -41,6 +41,17 @@ class ScopeConfig(BaseModel):
         return v
 
 
+class OOBConfig(BaseModel):
+    """Out-of-band callback confirmation for blind SSRF/XXE (docs/architecture.md
+    §27). Disabled by default — must be explicitly enabled, and requires a real
+    listener the operator has started separately (`sentinel oob listen`) at a
+    host/port reachable from the TARGET, not from SENTINEL. See docs/oob.md."""
+
+    enabled: bool = False
+    callback_base_url: str = ""
+    wait_seconds: float = 4.0
+
+
 class AuthContextEntry(BaseModel):
     """Declares a named identity for cross-identity authorization testing
     (docs/architecture.md §25/§26). `env_var` names an environment variable that
@@ -58,6 +69,7 @@ class TargetConfig(BaseModel):
     scope: ScopeConfig
     seed_urls: list[str] = Field(default_factory=list)
     auth_contexts: list[AuthContextEntry] = Field(default_factory=list)
+    oob: OOBConfig = Field(default_factory=OOBConfig)
 
     @field_validator("seed_urls")
     @classmethod

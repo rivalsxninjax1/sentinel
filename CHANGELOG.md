@@ -3,6 +3,64 @@
 All notable changes to this project are documented here.
 Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
 
+# Changelog
+
+All notable changes to this project are documented here.
+Format loosely follows Keep a Changelog; versions are pre-1.0 during phased development.
+
+## [0.13.0] - OOB Callback System
+### Added
+- `app/oob/client.py` — `OOBClient`: generates unguessable correlation IDs
+  (`secrets.token_hex`, not `uuid4` — these go into URLs sent to a third-party
+  target), registers them before sending a payload, waits, and checks for a
+  matching interaction. Opens its own short-lived DB connection per call rather
+  than threading a session through every scanner.
+- `app/oob/listener.py` — `OOBListener`: standalone, dependency-free HTTP
+  listener built on raw `asyncio` sockets (not a framework — needs to accept
+  literally any request an arbitrary target HTTP client sends). Started via
+  `sentinel oob listen`, logs every request whose path matches
+  `/oob/<correlation_id>` to the same SQLite file a scan uses.
+- `app/storage/models.py` — `OOBCorrelation`, `OOBInteraction` tables.
+- `app/storage/repository.py` — `OOBRepository`.
+- `app/scanners/ssrf.py`, `xxe.py` — both scanners now run TWO independent
+  techniques when `target.oob_client` is configured: the original
+  reflection-based check (low confidence, catches only non-blind cases) plus a
+  new OOB-based check (high confidence, direct network proof, catches BLIND
+  SSRF/XXE for the first time). XXE's OOB payload points the external entity at
+  the callback URL instead of `file:///etc/passwd` — a more universal technique
+  since it doesn't depend on any particular file existing.
+- `app/scanners/base.py` — `ScanTarget.oob_client`/`oob_scan_id` fields.
+- `app/core/test_orchestrator.py` — `oob_client`/`scan_id` constructor
+  parameters, threaded into parameter-level (SSRF) and form-level (XXE) scans.
+- `app/config/settings.py` — `target.oob` (disabled by default — must be
+  explicitly enabled per docs/architecture.md §27).
+- CLI: `sentinel oob listen --host --port --storage-path` — standalone listener
+  process. `scan test` now builds an `OOBClient` and passes it to the
+  orchestrator when `target.oob.enabled` is true.
+- `docs/oob.md` — full architecture, enabling instructions, and explicit
+  documented limitations (HTTP-only, no DNS-level confirmation, no wildcard
+  subdomains, adds real wall-clock time, no listener authentication).
+- Tests: `test_oob_listener.py` (11 tests — pure parsing logic plus real-socket
+  integration tests including a malformed-request resilience check),
+  `test_oob_client.py` (5 tests — including a full realistic sequence with a
+  real running listener and a concurrent simulated callback),
+  `test_ssrf_oob.py`, `test_xxe_oob.py` (10 tests combined — stub-based,
+  verifying both detection paths run correctly, findings compose when both
+  confirm, and existing Phase 7 behavior is fully preserved when OOB isn't
+  configured) — 26 new tests.
+
+### Notes
+- This is the direct answer to a gap every prior phase since Phase 7 explicitly
+  flagged in code and docs: "blind SSRF/XXE requires OOB infrastructure, not
+  built yet." It's now built, with its own honestly-documented limitations
+  (HTTP-only, no DNS confirmation) rather than overclaiming completeness.
+- Existing SSRF/XXE reflection-based behavior is completely unchanged when
+  `target.oob` isn't configured — this is purely additive.
+- The listener is a genuinely separate long-running process the operator must
+  start themselves, pointed at the same database file. This is a different
+  operational model than every other SENTINEL component (which run as one-shot
+  CLI commands) — worth understanding before relying on it for a real scan.
+
 ## [0.11.0] - Phase 11 - Dashboard
 ### Added
 - `app/dashboard/app.py` — `create_dashboard_app()`: a FastAPI app with five

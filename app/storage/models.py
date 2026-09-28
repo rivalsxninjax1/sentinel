@@ -214,3 +214,34 @@ class Correlation(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     rationale: Mapped[str] = mapped_column(String(1024), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+class OOBCorrelation(Base):
+    """A correlation ID SENTINEL generated and embedded in a payload sent to the
+    target, recorded BEFORE the request is sent so a later interaction can be
+    matched back to the scan/endpoint/parameter that triggered it. See
+    app/oob/client.py and docs/oob.md."""
+
+    __tablename__ = "oob_correlations"
+    correlation_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    scan_id: Mapped[str] = mapped_column(ForeignKey("scans.id"), nullable=False)
+    endpoint_id: Mapped[str | None] = mapped_column(ForeignKey("endpoints.id"), nullable=True)
+    parameter_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    vulnerability_class: Mapped[str] = mapped_column(String(64), nullable=False)
+    matched_endpoint: Mapped[str] = mapped_column(String(2048), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class OOBInteraction(Base):
+    """An actual inbound request the OOB listener (app/oob/listener.py) received.
+    Recorded independent of whether the correlation_id in the request path is
+    known — an interaction for an unrecognized ID is still logged (could be a scan
+    from a previous run, or noise), just never matched to a finding."""
+
+    __tablename__ = "oob_interactions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    correlation_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    protocol: Mapped[str] = mapped_column(String(16), nullable=False, default="http")
+    source_ip: Mapped[str] = mapped_column(String(64), nullable=False)
+    method: Mapped[str] = mapped_column(String(16), nullable=False)
+    path: Mapped[str] = mapped_column(String(2048), nullable=False)
+    headers_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

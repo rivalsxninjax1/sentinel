@@ -23,7 +23,7 @@ target:
   #     env_var: SENTINEL_AUTH_USER_B
 
 scan:
-  mode: active # passive | safe | active
+  mode: passive # passive | safe | active
 
 limits:
   requests_per_second: 5

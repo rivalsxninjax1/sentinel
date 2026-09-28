@@ -24,6 +24,8 @@ from app.storage.models import (
     Target,
     Technology,
     Test,
+    OOBCorrelation,
+    OOBInteraction,
 )
 
 
@@ -433,5 +435,64 @@ class FindingsRepository:
     async def list_evidence_for_finding(self, finding_id: str) -> list[Evidence]:
         result = await self._session.execute(
             select(Evidence).where(Evidence.finding_id == finding_id)
+        )
+        return list(result.scalars().all())
+
+
+class OOBRepository:
+    """Repository for the OOB (out-of-band) callback system. Correlations and
+    interactions are written by two different processes (a scanner mid-scan, and
+    the standalone listener process — potentially in a different terminal,
+    minutes or hours later) — this repository is the shared contract between
+    them, both reading/writing the same SQLite file. See app/oob/client.py and
+    app/oob/listener.py."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def create_correlation(
+        self,
+        correlation_id: str,
+        scan_id: str,
+        vulnerability_class: str,
+        matched_endpoint: str,
+        endpoint_id: str | None = None,
+        parameter_name: str | None = None,
+    ) -> OOBCorrelation:
+        record = OOBCorrelation(
+            correlation_id=correlation_id,
+            scan_id=scan_id,
+            endpoint_id=endpoint_id,
+            parameter_name=parameter_name,
+            vulnerability_class=vulnerability_class,
+            matched_endpoint=matched_endpoint,
+        )
+        self._session.add(record)
+        await self._session.flush()
+        return record
+
+    async def get_correlation(self, correlation_id: str) -> OOBCorrelation | None:
+        return await self._session.get(OOBCorrelation, correlation_id)
+
+    async def record_interaction(
+        self, correlation_id: str, protocol: str, source_ip: str, method: str, path: str, headers: dict
+    ) -> OOBInteraction:
+        record = OOBInteraction(
+            correlation_id=correlation_id, protocol=protocol, source_ip=source_ip,
+            method=method, path=path, headers_json=headers,
+        )
+        self._session.add(record)
+        await self._session.flush()
+        return record
+
+    async def list_interactions_for_correlation(self, correlation_id: str) -> list[OOBInteraction]:
+        result = await self._session.execute(
+            select(OOBInteraction).where(OOBInteraction.correlation_id == correlation_id)
+        )
+        return list(result.scalars().all())
+
+    async def list_correlations_for_scan(self, scan_id: str) -> list[OOBCorrelation]:
+        result = await self._session.execute(
+            select(OOBCorrelation).where(OOBCorrelation.scan_id == scan_id)
         )
         return list(result.scalars().all())

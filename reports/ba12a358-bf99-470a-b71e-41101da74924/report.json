@@ -1,0 +1,363 @@
+{
+  "scan_id": "ba12a358-bf99-470a-b71e-41101da74924",
+  "target_name": "quick-scan-emis.cehrd.gov.np",
+  "scan_mode": "active",
+  "generated_at": "2026-09-13T15:22:10.758298+00:00",
+  "findings": [
+    {
+      "id": "5b0649fe-da3e-4d15-8a34-f300ed6e7ef0",
+      "title": "Missing security header: Content-Security-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "medium",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://emis.cehrd.gov.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Content-Security-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T15:22:08.174818",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "966aa470-e84f-4891-897d-873d720a0009",
+      "title": "Missing security header: Referrer-Policy",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://emis.cehrd.gov.np/",
+      "description": "status=200",
+      "metadata": {
+        "header": "Referrer-Policy",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "status=200"
+      ],
+      "created_at": "2026-09-13T15:22:08.178125",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "b4d1a25d-112c-40a5-863c-f2e0baf7d3e9",
+      "title": "'server' header discloses: Microsoft-IIS/10.0",
+      "vulnerability_class": "security_headers",
+      "severity": "info",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://emis.cehrd.gov.np/",
+      "description": "server: Microsoft-IIS/10.0",
+      "metadata": {
+        "header": "server",
+        "vulnerability_class": "security_headers",
+        "confidence": "high"
+      },
+      "evidence": [
+        "server: Microsoft-IIS/10.0"
+      ],
+      "created_at": "2026-09-13T15:22:08.179712",
+      "cwe_id": "CWE-693",
+      "cwe_name": "Protection Mechanism Failure",
+      "impact": "Missing security headers reduce defense-in-depth against clickjacking, MIME-sniffing, and content-injection attacks; impact depends on which header is missing and what else the application does to compensate.",
+      "remediation": "Set Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, and Referrer-Policy appropriately for the application; avoid disclosing server/framework versions in Server/X-Powered-By headers.",
+      "approximate_cvss": null,
+      "correlation": null
+    },
+    {
+      "id": "fe97d798-79bb-495a-aa82-45537e305b64",
+      "title": "Potentially exposed sensitive file: /.git/HEAD",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/.git/HEAD",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": ".git/HEAD",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.181350",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "61866e27-0636-44bd-b1c7-19d41ffc70ff",
+      "title": "Potentially exposed sensitive file: /.env",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/.env",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": ".env",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.182830",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "d88dc51e-e932-4507-99fd-c05f2c29592b",
+      "title": "Potentially exposed sensitive file: /.DS_Store",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/.DS_Store",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": ".DS_Store",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.184231",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "8c76a598-785d-4a64-974f-4d032792e0fe",
+      "title": "Potentially exposed sensitive file: /backup.zip",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/backup.zip",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": "backup.zip",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.185625",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "c07ce6a7-49a1-4ca4-9550-0d34639cf0c6",
+      "title": "Potentially exposed sensitive file: /backup.sql",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/backup.sql",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": "backup.sql",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.187026",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "21e1ae98-4c23-4880-ab28-6de38a8bc195",
+      "title": "Potentially exposed sensitive file: /wp-config.php.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/wp-config.php.bak",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": "wp-config.php.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.188579",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "4568dbaf-6f3b-44eb-b112-37775dc5dc92",
+      "title": "Potentially exposed sensitive file: /config.php.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/config.php.bak",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": "config.php.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.189908",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "aa73870c-4d83-4a73-beec-7f23169c9af3",
+      "title": "Potentially exposed sensitive file: /.svn/entries",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/.svn/entries",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": ".svn/entries",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.191378",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "c5342806-1d01-449d-8dcc-b72c8e45386a",
+      "title": "Potentially exposed sensitive file: /web.config.bak",
+      "vulnerability_class": "information_exposure",
+      "severity": "medium",
+      "confidence": "low",
+      "verification_status": "verified",
+      "disposition": "Potential",
+      "matched_endpoint": "https://emis.cehrd.gov.np/web.config.bak",
+      "description": "status=200, length=5973",
+      "metadata": {
+        "path": "web.config.bak",
+        "vulnerability_class": "information_exposure",
+        "confidence": "low"
+      },
+      "evidence": [
+        "status=200, length=5973"
+      ],
+      "created_at": "2026-09-13T15:22:08.192711",
+      "cwe_id": "CWE-200",
+      "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor",
+      "impact": "Exposed configuration, backup, or version-control files can leak credentials, source code, or internal architecture details useful for further attacks.",
+      "remediation": "Remove sensitive files from the web root, block access via server configuration, and exclude them from deployment artifacts entirely.",
+      "approximate_cvss": 5.4,
+      "correlation": null
+    },
+    {
+      "id": "27851ec5-9973-4e69-8b57-4e5b21fa66ff",
+      "title": "Endpoint declares potentially sensitive HTTP methods: TRACE",
+      "vulnerability_class": "http_method_enumeration",
+      "severity": "low",
+      "confidence": "high",
+      "verification_status": "verified",
+      "disposition": "Likely",
+      "matched_endpoint": "https://emis.cehrd.gov.np/",
+      "description": "Allow: OPTIONS, TRACE, GET, HEAD, POST",
+      "metadata": {
+        "vulnerability_class": "http_method_enumeration",
+        "confidence": "high",
+        "declared_methods": [
+          "GET",
+          "HEAD",
+          "OPTIONS",
+          "POST",
+          "TRACE"
+        ],
+        "note": "reports what the Allow header claims only \u2014 does not attempt PUT/DELETE/PATCH requests, which could modify or delete real data"
+      },
+      "evidence": [
+        "Allow: OPTIONS, TRACE, GET, HEAD, POST"
+      ],
+      "created_at": "2026-09-13T15:22:08.193576",
+      "cwe_id": "CWE-650",
+      "cwe_name": "Trusting HTTP Permission Methods on the Server Side",
+      "impact": "Declaring PUT/DELETE/PATCH as allowed doesn't by itself confirm they're exploitable, but often indicates the endpoint wasn't designed with per-method authorization in mind.",
+      "remediation": "Explicitly restrict allowed methods per route at the framework/routing layer, and apply the same authorization checks regardless of which method reaches a given handler.",
+      "approximate_cvss": 3.1,
+      "correlation": null
+    }
+  ],
+  "excluded_false_positives": [],
+  "summary_by_disposition": {
+    "Likely": 4,
+    "Potential": 9
+  },
+  "summary_by_severity": {
+    "medium": 10,
+    "info": 2,
+    "low": 1
+  }
+}

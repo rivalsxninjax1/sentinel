@@ -31,6 +31,8 @@ from app.core.lifecycle import ScanLifecycle, ScanState
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limiter import RateLimiter
 from app.core.test_orchestrator import TestOrchestrator
+from app.oob.client import OOBClient
+from app.oob.listener import OOBListener
 from app.crawler.browser import BrowserDiscovery, BrowserEngine, BrowserUnavailable
 from app.crawler.crawler import Crawler
 from app.intelligence.javascript import JSExtractionResult, extract_from_js
@@ -57,6 +59,8 @@ scan_app = typer.Typer(help="Scan lifecycle commands.")
 tools_app = typer.Typer(help="Tool adapter commands.")
 app.add_typer(scan_app, name="scan")
 app.add_typer(tools_app, name="tools")
+oob_app = typer.Typer(help="Out-of-band callback listener commands.")
+app.add_typer(oob_app, name="oob")
 
 logger = get_logger(__name__)
 
@@ -627,8 +631,21 @@ def scan_test(
                 for a in cfg.target.auth_contexts
             ]
         )
+        oob_client = None
+        if cfg.target.oob.enabled:
+            if not cfg.target.oob.callback_base_url:
+                typer.echo(
+                    "target.oob.enabled is true but callback_base_url is empty — "
+                    "OOB checks will be skipped.", err=True,
+                )
+            else:
+                oob_client = OOBClient(
+                    cfg.target.oob.callback_base_url, cfg.storage_path, cfg.target.oob.wait_seconds
+                )
+
         orchestrator = TestOrchestrator(
-            scanners=build_default_scanners(), mode=mode, auth_contexts=auth_contexts
+            scanners=build_default_scanners(), mode=mode, auth_contexts=auth_contexts,
+            oob_client=oob_client, scan_id=scan_id,
         )
 
         findings_to_persist: list[tuple[str, str | None, object]] = []  # (endpoint_id, parameter_id, NormalizedFinding)
@@ -1037,6 +1054,27 @@ def dashboard(
     typer.echo(f"SENTINEL dashboard running at http://{host}:{port}")
     uvicorn.run(dashboard_app, host=host, port=port, log_level="warning")
 
+
+@oob_app.command("listen")
+def oob_listen(
+    host: str = typer.Option("0.0.0.0", help="Bind address. Must be reachable from the TARGET, not just SENTINEL."),
+    port: int = typer.Option(8888, help="Port to listen on."),
+    storage_path: str = typer.Option(..., "--storage-path", help="Same storage_path your scan's config uses."),
+) -> None:
+    """Phase 12 — OOB callback system: runs a standalone listener that logs any
+    inbound HTTP request whose path matches /oob/<correlation_id>. Run this in
+    its own terminal/session BEFORE starting a scan with target.oob.enabled set —
+    it must stay running for the duration of any OOB-confirmed check.
+
+    SECURITY: no authentication on this listener — the correlation ID in the URL
+    path is the only thing preventing unrelated traffic from being misattributed.
+    It must be reachable from the TARGET application; for a remote target that
+    means a real public IP/hostname, which SENTINEL does not provision for you."""
+    configure_logging("INFO")
+    listener = OOBListener(host, port, storage_path)
+    typer.echo(f"OOB listener running at http://{host}:{port} (storage: {storage_path})")
+    typer.echo("Waiting for callbacks matching /oob/<correlation_id> ... (Ctrl+C to stop)")
+    asyncio.run(listener.serve_forever())
 
 if __name__ == "__main__":
     app()
